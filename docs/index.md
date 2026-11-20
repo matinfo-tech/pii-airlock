@@ -21,16 +21,32 @@ hero:
       text: What is it?
       link: /guide/what-is-it
 features:
-  - icon: 🔒
+  - icon:
+      src: /icons/shield-lock.svg
+      alt: ''
+      width: 28
+      height: 28
     title: Stays on your computer
-    details: Detection runs locally. The AI provider only ever sees placeholders such as <PERSON_482913>.
-  - icon: ↩️
+    details: Detection runs locally. The AI provider only ever sees placeholders such as <code>&lt;PERSON_482913&gt;</code>.
+  - icon:
+      src: /icons/restore.svg
+      alt: ''
+      width: 28
+      height: 28
     title: Reversible
     details: The answer comes back with your real names and emails in place, so you read it as usual.
-  - icon: 🔌
+  - icon:
+      src: /icons/plug.svg
+      alt: ''
+      width: 28
+      height: 28
     title: Works with your tools
     details: Claude Code, GitHub Copilot, Cursor, Codex, Aider, Continue and anything that lets you set a base URL.
-  - icon: 🛠️
+  - icon:
+      src: /icons/sliders.svg
+      alt: ''
+      width: 28
+      height: 28
     title: You decide what counts
     details: Tell it which words are never sensitive (your company) or always sensitive (a code name), in one command.
 ---
