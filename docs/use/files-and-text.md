@@ -40,9 +40,8 @@ pii-airlock restore answer.txt -o answer.final.txt
 The placeholders are replaced by the real names and emails.
 
 ::: danger The mapping contains the real data
-It is encrypted with a key that stays on this computer, so it only opens here. If you write it
-elsewhere with `--map FILE`, it is plain JSON: never email, upload or commit that file. Delete
-mappings when you have finished restoring. If you never need to restore, use `--no-map`.
+Never email, upload or commit a map file, and delete mappings when you have finished restoring.
+Details on where maps live and how they are protected: [Data handling](/reference/data-handling).
 :::
 
 ## Which files work?
@@ -59,7 +58,7 @@ pii-airlock scrub contract.docx -o contract.clean.docx
 pii-airlock scrub scan.pdf > scan.clean.txt
 ```
 
-Install the extras from [Install, all options](/guide/install#optional-extras).
+Install the extras from [Install](/guide/install#optional-extras).
 
 ## See what it would hide first
 

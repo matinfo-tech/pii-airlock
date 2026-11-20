@@ -50,7 +50,7 @@ Yes. macOS, Linux and Windows are tested in CI. The Claude Code **plugin** needs
 
 ## How do I update or remove it?
 
-`pipx upgrade pii-airlock` and `pipx uninstall pii-airlock`. See [Install, all options](/guide/install#update-and-uninstall).
+`pipx upgrade pii-airlock` and `pipx uninstall pii-airlock`. See [Install](/guide/install#update-and-uninstall).
 
 ## How can I contribute?
 

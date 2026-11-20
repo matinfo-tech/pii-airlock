@@ -36,32 +36,18 @@ Specific gaps:
 
 ## The map file holds the real data
 
-When you clean a file with `scrub`, the mapping stores the original values.
-
-- By default it goes to the project's `.pii-airlock/maps/`, **encrypted** with a key that stays in
-  `~/.local/state/pii-airlock/`, and the folder's own `.gitignore` keeps it out of Git.
-- `--map FILE` writes plain JSON where you say (add `--encrypt-map` to encrypt it). Never commit,
-  email or upload such a file.
-- Delete mappings when you are done. Use `--no-map` if you will never need to restore.
-
-The gateway keeps its mapping **in memory only** and forgets it after each response.
-
-How the encryption works: AES-256-GCM, with a key derived from `token.key`. A copied, synced or backed-up project
-folder is useless without that key, so keep `token.key` out of backups and never put it in the repository.
-Losing it makes the maps unreadable. See [Settings](/reference/settings#mapping-storage-and-encryption).
-
-The repository's own `.gitignore` also excludes `*.pii-map.json` and `*.pii-map.*`.
-
-On Windows, files cannot be set to owner-only the way they are on macOS and Linux (mapping files are created
-with mode `0600` on POSIX). They inherit your account's default permissions, which are normally private in your
-home folder. Treat mapping files as secrets regardless.
+When you clean a file with `scrub`, the mapping stores the original values so that `restore` can put them back.
+By default it is encrypted and kept out of Git; a plain `--map` file is not. **Never commit, email or upload a
+map file.** Everything about maps, keys and encryption is on one page:
+[Data handling](/reference/data-handling).
 
 ## Ways to improve accuracy
 
 1. Use the larger models (the default `_lg`) or [GLiNER](/customize/languages#many-languages-with-one-model-gliner).
 2. [Deny](/customize/allow-and-deny) your internal names, so they are always caught.
 3. Set the [action](/customize/actions) for critical types to `block`.
-4. Lower the threshold (for example `score_threshold: 0.4`) to catch more, accepting more false alarms.
+4. Lower the threshold (for example `score_threshold: 0.4`, see [Settings](/reference/settings#detection))
+   to catch more, accepting more false alarms.
 
 ## Reporting a vulnerability
 
