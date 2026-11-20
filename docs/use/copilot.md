@@ -67,8 +67,14 @@ Your own API key is forwarded to the provider and never logged.
 - **What it reads.** Copilot's tools are `bash`, `powershell`, `view`, `edit`, `create`, `glob`, `grep`,
   `web_fetch`, `web_search`, `task`, `ask_user`, `update_todo`, `str_replace_editor`, `apply_patch`, `rg`, plus MCP
   tools. GitHub does not document their argument names, so **every string argument of every tool is scanned**.
-  `view` also scans the file's content. Both payload shapes are accepted: camelCase (`toolName`, `toolArgs` as JSON
-  text) and snake_case (`tool_name`, `tool_input`).
+  `view` also scans the file's content. Both payload shapes are accepted: camelCase (`toolName`, with `toolArgs` as
+  an object or as JSON text) and snake_case (`tool_name`, `tool_input`).
+- **Only guarded projects.** As with Claude Code, the hook stays silent in a folder that has no `.pii-airlock/`.
+  Run `pii-airlock init` in each project you want checked.
+- **Project-scope hooks need a trusted folder.** Copilot CLI skips a repository's `.github/hooks/` until the folder is
+  listed under `trustedFolders` in `~/.copilot/config.json`. The user-level hook that `init` installs
+  (`~/.copilot/hooks/pii-airlock.json`) needs no trust.
+- **Non-interactive runs.** `copilot -p` cannot ask, so an `ask` decision denies the call.
 - **Failure modes** (from GitHub's hooks reference). A hook that errors or exits with code 2 denies the tool call, so
   detection failures fail closed. A hook **timeout is fail-open**, so keep the helper on (`hook_daemon: auto`, the
   default) to stay far below the 30 second default. The cloud agent treats `ask` as `deny` and honours only the
@@ -81,6 +87,17 @@ Your own API key is forwarded to the provider and never logged.
 
 ## Honest status
 
-The Claude Code hook is tested end to end. The Copilot hook follows GitHub's and VS Code's published specifications,
-but has not yet been tested against a live Copilot session. If a tool call slips through, please
-[open an issue](https://github.com/matinfo-tech/pii-airlock/issues/new/choose) with the hook payload.
+The Claude Code hook is tested end to end. The Copilot hook was checked against live Copilot CLI sessions
+(version 1.0.114, November 2026, non-interactive `copilot -p`, user-level hook):
+
+| Checked live | Result |
+| --- | --- |
+| `~/.copilot/hooks/pii-airlock.json` is loaded | yes |
+| A top-level `permissionDecision` with exit code 0 stops the call | yes |
+| `bash`, `view`, `create`, `edit`, `grep` calls carrying personal data | stopped |
+| Clean `bash`, `view`, `create`, `glob` calls | run untouched |
+
+Not yet checked live: the interactive `ask` dialog, a trusted project-scope hook, the timeout and exit-code-2
+paths, the cloud agent, and Copilot in VS Code. Those still rest on GitHub's and VS Code's published specifications.
+If a tool call slips through, please [open an issue](https://github.com/matinfo-tech/pii-airlock/issues/new/choose)
+with the hook payload.
