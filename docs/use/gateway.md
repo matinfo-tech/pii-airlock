@@ -117,8 +117,54 @@ in [Settings](/reference/settings).
 
 - Text in chat, completion, embedding and token-count requests: **cleaned**, including tool results and tool arguments.
 - Images, audio and attached files inside a request: **sent as they are**.
+- Anthropic `thinking` blocks are signed, so they are neither cleaned nor restored.
+
+## How the gateway works (details)
+
+**What it covers.** Three wire formats, one adapter each (`pii_scrub/payload.py`):
+
+| Route | Wire format | Covers | Streaming |
+|---|---|---|---|
+| `/openai` | Chat Completions, Responses, Completions, Embeddings, Moderations | OpenAI, Codex, Cursor, Continue, Ollama, LiteLLM, vLLM, … | SSE ✅ |
+| `/anthropic` | Messages (including `count_tokens` and batches) | Claude SDKs and Claude-compatible tools | SSE ✅ |
+| `/gemini` | generateContent, countTokens, embedContent | Google Gemini | SSE ✅ · array streaming is buffered |
+
+Gemini streaming without `alt=sse` is buffered and restored as one response instead of streamed live.
+Pass `alt=sse` if your client supports it.
+
+**Tool traffic.** Tool results and function outputs (where file contents and command output live) and
+tool-call arguments are cleaned on the way out. Tool-call arguments the model writes are restored on the way back.
+This is what makes the gateway cover the tool output that [hooks cannot see](/use/claude-code#what-hooks-cannot-see).
+
+**Privacy properties.**
+
+- No TLS interception: your client speaks plain HTTP to `localhost`, and the gateway makes the real HTTPS call.
+  It listens on `127.0.0.1` by default.
+- Authentication headers pass through untouched. Request headers and bodies are never logged
+  (the server runs at log level `warning`, so not even request lines are logged).
+- Each request gets a fresh mapping **in memory**. The gateway writes no personal data to disk.
+  The only thing it stores is the [token key](/customize/placeholders).
+- Detection is serialized with a lock, so simultaneous requests share the engine safely.
+
+**Refusals fail closed.** A body the gateway cannot clean (unknown endpoint, or not JSON) is refused with 403 or 400.
+Opt specific paths out with `passthrough_paths` only if you know they carry no personal data.
+
+## Setup for coding agents
+
+| Tool | What to do |
+|---|---|
+| Codex CLI, OpenAI SDKs, LiteLLM (`api_base=`), vLLM and Ollama front-ends | `OPENAI_BASE_URL` as above. Chat Completions **and** the Responses API (used by Codex) are covered, including function-call arguments and outputs. |
+| Claude Code | Use [hooks](/use/claude-code). You can add the gateway too, for tool output. |
+| GitHub Copilot | See [GitHub Copilot](/use/copilot). |
+
+## Add a provider
+
+A provider is one small adapter: implement `scrub_request` (where user text lives) and `restore_response`
+(where model text lives) in `pii_scrub/payload.py`, register it and add tests. See
+[CONTRIBUTING](https://github.com/matinfo-tech/pii-airlock/blob/main/CONTRIBUTING.md).
 
 ## Check it
 
 Send a message containing a fake name and email. Your tool should show them normally.
-The provider's logs should show placeholders. See [Check that it works](/guide/check-it-works).
+The provider's dashboard or logs should show a placeholder such as `<EMAIL_ADDRESS_093117>` instead of the real value.
+See [Check that it works](/guide/check-it-works).
