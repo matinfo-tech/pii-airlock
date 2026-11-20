@@ -42,6 +42,8 @@ entity_actions:
 
 Put it in your project's `.pii-airlock/config.yaml`.
 
+Layers add up (your user config plus the project policy). An explicit action beats `exclude_entities`.
+
 ## Related names stay protected
 
 If you set `EMAIL_ADDRESS: allow`, emails stay readable. But a bare `marie` that matches a "Marie Dubois" found

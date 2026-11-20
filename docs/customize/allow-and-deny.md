@@ -76,3 +76,9 @@ pii-airlock trust
 
 Do this again after a `git pull` that changes it. `pii-airlock status` tells you what is currently being ignored.
 Your own rules in `~/.config/pii-airlock/config.yaml` are always trusted.
+
+What counts as "tightening": deny-list terms, custom patterns, `block` and `redact` actions, and the `deny`, `block`
+and `closed` decisions. What counts as "loosening": `allow_list`, `hook_on_error: open`,
+`entity_actions: {PERSON: allow}` and the like. A policy that `init` created, and your own `allow`, `deny` and
+`action` edits, are trusted already. A teammate who clones the repo runs `pii-airlock init` too: the shared file then
+applies, but only the tightening part, until they review it and run `pii-airlock trust`.

@@ -293,7 +293,7 @@ class Mapping:
         Created with mode 0600 from the start (no world-readable window) on
         POSIX. On Windows the mode argument is ignored by the OS, so the file
         inherits the user's default ACLs — typically already user-private in a
-        home directory. See the README security note.
+        home directory. See the user guide (guide/safety).
         """
         path = Path(path)
         data = json.dumps(self.to_dict(), ensure_ascii=False, indent=2).encode("utf-8")

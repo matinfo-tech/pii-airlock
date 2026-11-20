@@ -55,11 +55,32 @@ Copilot hooks cannot block what you type in chat. Instead, add your own model th
 ]
 ```
 
-For Claude models use `"apiType": "messages"` and the URL `http://127.0.0.1:8745/anthropic/v1/messages`.
+For Claude models use `"apiType": "messages"` and the URL `http://127.0.0.1:8745/anthropic/v1/messages`
+(for example model id `claude-sonnet-4-6`). `"apiType": "responses"` also works, with
+`http://127.0.0.1:8745/openai/v1/responses`.
 Your own API key is forwarded to the provider and never logged.
+
+## How the hook behaves (details)
+
+- **Same checks as Claude Code.** `hook_decision`, `entity_actions: block` and `hook_on_error` all apply.
+  The hook registers `preToolUse` with no matcher, so it sees every tool call.
+- **What it reads.** Copilot's tools are `bash`, `powershell`, `view`, `edit`, `create`, `glob`, `grep`,
+  `web_fetch`, `web_search`, `task`, `ask_user`, `update_todo`, `str_replace_editor`, `apply_patch`, `rg`, plus MCP
+  tools. GitHub does not document their argument names, so **every string argument of every tool is scanned**.
+  `view` also scans the file's content. Both payload shapes are accepted: camelCase (`toolName`, `toolArgs` as JSON
+  text) and snake_case (`tool_name`, `tool_input`).
+- **Failure modes** (from GitHub's hooks reference). A hook that errors or exits with code 2 denies the tool call, so
+  detection failures fail closed. A hook **timeout is fail-open**, so keep the helper on (`hook_daemon: auto`, the
+  default) to stay far below the 30 second default. The cloud agent treats `ask` as `deny` and honours only the
+  `bash` command.
+- **One install is enough.** Copilot CLI also reads a repository's `.claude/settings.json`. If you registered the
+  Claude Code hook there by hand (`install-hook --scope project`), do not add the Copilot file as well, or every call is
+  scanned twice. `init` writes neither.
+- **Reply format.** One JSON object carries both Copilot's top-level `permissionDecision` and Claude Code's nested
+  `hookSpecificOutput`. Each side reads its own part.
 
 ## Honest status
 
-The Copilot hook follows GitHub's published specification, but has not yet been tested against a live Copilot
-session. If a tool call slips through, please
+The Claude Code hook is tested end to end. The Copilot hook follows GitHub's and VS Code's published specifications,
+but has not yet been tested against a live Copilot session. If a tool call slips through, please
 [open an issue](https://github.com/matinfo-tech/pii-airlock/issues/new/choose) with the hook payload.

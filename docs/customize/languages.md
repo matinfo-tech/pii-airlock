@@ -48,3 +48,22 @@ pii-airlock download-models
 | Names found correctly | good | better, with far fewer false alarms |
 
 Emails, phone numbers, IDs and secrets are found by patterns in both modes.
+
+### Measured quality
+
+On the bundled English and French evaluation corpus (`python -m tests.eval.run_eval --backend gliner`):
+
+| | spaCy `_sm` models | GLiNER |
+|---|---|---|
+| Names (`PERSON`): recall / precision | 0.96 / 0.68 | 1.00 / 0.95 |
+| All types: precision | 0.67 | 0.98 |
+| Time per message (CPU) | about 6 ms | about 40 ms |
+
+Fewer false positives means fewer needless hook prompts.
+
+How it behaves:
+
+- Long texts are scanned in overlapping windows, because GLiNER itself truncates past a few hundred words.
+- Organizations and places must be capitalized to count. This drops common nouns GLiNER tags, such as "la société"
+  or "client". Names are kept in any case.
+- With the hook helper, the model is loaded once.

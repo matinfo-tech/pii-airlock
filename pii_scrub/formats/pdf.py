@@ -3,7 +3,7 @@
 Optional dependency: pdfminer.six  (pip install 'pii-airlock[pdf]')
 
 MVP scope: PDF is read-only. We extract the text layer and output scrubbed
-.txt; we do not re-render a PDF. Documented in the README.
+.txt; we do not re-render a PDF. Documented in the user guide (guide/safety).
 """
 
 from __future__ import annotations
