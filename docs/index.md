@@ -9,8 +9,14 @@ hero:
     alt: pii-airlock
   actions:
     - theme: brand
-      text: Get started in 5 minutes
+      text: I use Claude Code or Copilot
       link: /guide/quick-start
+    - theme: brand
+      text: I use another AI app or SDK
+      link: /guide/quick-start-gateway
+    - theme: alt
+      text: I want to clean a file
+      link: /use/files-and-text
     - theme: alt
       text: What is it?
       link: /guide/what-is-it
@@ -39,6 +45,6 @@ You read:             Dear John Smith, regarding the invoice…
 ```
 
 ::: tip New here?
-Read [What is pii-airlock?](/guide/what-is-it), then follow the [Quick start](/guide/quick-start).
-You do not need to know Python. You do need to be comfortable pasting a few commands into a terminal.
+Read [What is pii-airlock?](/guide/what-is-it), then [pick your setup](/use/pick-your-setup) and follow its
+quick start. You do not need to know Python. You do need to be comfortable pasting a few commands into a terminal.
 :::
