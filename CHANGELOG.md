@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- The Copilot hook is now validated against a live Copilot CLI session (1.0.114): the
+  user-level hook file loads, the reply stops tool calls, and the real `bash`, `view`,
+  `create`, `edit`, `grep` and `glob` payloads are scanned. The recorded payloads are
+  test fixtures, and the Copilot page lists what was and was not checked live.
+- `install-hook --target copilot --scope project` now says that Copilot CLI skips
+  `.github/hooks/` until the folder is in `trustedFolders`.
+
 ## [0.8.2] - 2026-11-21
 
 ### Changed

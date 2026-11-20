@@ -635,6 +635,10 @@ def install_hook(
         typer.echo(f"{'Installed' if changed else 'Already present:'} Copilot preToolUse hook "
                    f"in {path}. Prompts are not hookable in Copilot: route chat through the "
                    "gateway (https://pii-airlock.matinfo.tech/use/copilot).")
+        if scope == "project":
+            typer.echo("Copilot CLI skips .github/hooks/ until this folder is trusted: add "
+                       f"{Path.cwd()} to \"trustedFolders\" in ~/.copilot/config.json, "
+                       "or use --scope user.", err=True)
         return
     if target != "claude":
         typer.echo("--target must be 'claude' or 'copilot'", err=True)

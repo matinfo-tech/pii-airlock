@@ -168,3 +168,5 @@ def test_cli_target_copilot(tmp_path, monkeypatch, scope):
     monkeypatch.setenv("COPILOT_HOME", str(tmp_path / "cp"))
     result = CliRunner().invoke(cli.app, ["install-hook", "--target", "copilot", "--scope", scope])
     assert result.exit_code == 0 and "preToolUse" in result.output
+    # Copilot CLI ignores a repository's hooks until the folder is trusted.
+    assert ("trustedFolders" in result.output) == (scope == "project")
