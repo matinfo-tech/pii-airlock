@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- The README was rewritten around first-run usage (~120 lines instead of ~720). All
+  reference material — gateway internals, hook settings, configuration, recognizers,
+  tokens, troubleshooting — now lives only in the user guide at
+  <https://pii-airlock.matinfo.tech/>, with deep links from the README.
+- `AGENTS.md` is now what the name means to coding agents: instructions for working on
+  this repository. The per-tool integration guides it used to hold moved to the user
+  guide (`use/gateway`, `use/copilot`).
 - The repository moved to the `matinfo-tech` organisation:
   <https://github.com/matinfo-tech/pii-airlock>. The user guide is now at
   <https://pii-airlock.matinfo.tech/> and the Claude Code plugin is added with
