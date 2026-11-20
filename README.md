@@ -18,7 +18,7 @@ A local privacy layer for AI tools: swaps personal data for placeholders before 
 
 Works with **Claude Code · GitHub Copilot · Codex · Cursor · Aider · Gemini · any OpenAI-compatible client**
 
-**[📖 User guide](https://matinfo-tech.github.io/pii-airlock/) · [Quickstart](#2-minute-quickstart) · [Install](#install) · [Gateway](#universal-gateway-any-provider) · [CLI](#cli-usage) · [Copilot](#github-copilot) · [doctor](#doctor-health-checks) · [Troubleshooting](#troubleshooting) · [All agents →](AGENTS.md)**
+**[📖 User guide](https://pii-airlock.matinfo.tech/) · [Quickstart](#2-minute-quickstart) · [Install](#install) · [Gateway](#universal-gateway-any-provider) · [CLI](#cli-usage) · [Copilot](#github-copilot) · [doctor](#doctor-health-checks) · [Troubleshooting](#troubleshooting) · [All agents →](AGENTS.md)**
 
 </div>
 

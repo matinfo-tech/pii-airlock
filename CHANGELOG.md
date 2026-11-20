@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - The repository moved to the `matinfo-tech` organisation:
   <https://github.com/matinfo-tech/pii-airlock>. The user guide is now at
-  <https://matinfo-tech.github.io/pii-airlock/> and the Claude Code plugin is added with
+  <https://pii-airlock.matinfo.tech/> and the Claude Code plugin is added with
   `/plugin marketplace add matinfo-tech/pii-airlock`. The package author is now Matinfo.
 
 ## [0.8.0] - 2026-11-06
