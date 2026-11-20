@@ -17,7 +17,7 @@ def _run(monkeypatch, capsys, event, found=("EMAIL_ADDRESS",)):
 
     def analyze(_config, _event, texts):
         seen.extend(texts)
-        return [SimpleNamespace(entity_type=t) for t in found]
+        return [("", [SimpleNamespace(entity_type=t, start=0, end=0) for t in found])]
 
     monkeypatch.setattr(_common, "_analyze", analyze)
     monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(event)))
@@ -32,7 +32,7 @@ def test_copilot_payload_is_scanned_and_answered_in_copilot_format(monkeypatch, 
     reply, seen = _run(monkeypatch, capsys, event)
     assert seen == ["mail jean@acme.fr"]
     assert reply["permissionDecision"] in ("ask", "deny")
-    assert "pii-airlock" in reply["permissionDecisionReason"]
+    assert "PII detected in bash input — EMAIL_ADDRESS" in reply["permissionDecisionReason"]
 
 
 def test_copilot_tools_with_unknown_names_are_still_scanned(monkeypatch, capsys):

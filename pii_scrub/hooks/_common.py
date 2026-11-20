@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -185,6 +186,61 @@ def _analyze(config: Config, event: dict, texts: list[str]) -> list[tuple[str, l
     return [(chunk, engine.detect(chunk)) for chunk in chunks]
 
 
+# Shell tools: a command line is not prose, and NER reads it badly (`npm` as an
+# organisation, `customer.txt` as a place, `git log --oneline` as a person).
+_SHELL_TOOLS = frozenset({"Bash", "bash", "powershell"})
+# Entity types that only the language model finds. Pattern detections (e-mail, IBAN,
+# phone, secrets, national ids...) are precise on command lines too and are never dropped.
+_NER_TYPES = frozenset({"PERSON", "LOCATION", "ORGANIZATION", "NRP"})
+_NAME_WORD = re.compile(r"[^\W\d_]+(?:['’-][^\W\d_]+)*\.?")
+_QUOTES = "\"'`"
+_SPAN_EDGES = " \t\n\"'`()[]{}<>,;:="
+_NAME_PARTICLES = frozenset({"de", "du", "des", "la", "le", "van", "von", "der", "den",
+                             "di", "da", "del", "della", "of", "and", "et", "&",
+                             "the", "a", "an"})
+# Capitalised words that fill command descriptions and commit messages.
+_TECH_WORDS = frozenset("""
+    api aws azure bash build bun cargo ci cli css docker dockerfile eslint git github gitlab
+    go gradle homebrew html http https java javascript jest json kubernetes linux macos make
+    makefile markdown maven mysql nginx node npm pnpm postgres prettier pytest python react
+    readme redis ruby ruff rust shell sql svelte terraform typescript ubuntu vite vue
+    webpack windows yaml yarn zsh
+""".split())
+
+
+def _reads_as_a_name(text: str, start: int, end: int) -> bool:
+    """Whether a model detection in a command line looks like a name written by a person:
+    whole words only (no path, flag, file name or operator), at least one of them
+    capitalised like a name ("Jean", not "npm" or "HEAD"), none a tool name. The capital
+    that opens a sentence ("Push branch", `-m "Fix login"`) does not count, unless the
+    word stands alone (`grep "Dupont"`)."""
+    span = text[start:end]
+    start += len(span) - len(span.lstrip(_SPAN_EDGES))  # NER spans often take a quote along
+    words = span.strip(_SPAN_EDGES).split()
+    if not words or not all(_NAME_WORD.fullmatch(w) for w in words):
+        return False
+    core = [w for w in words if w.casefold() not in _NAME_PARTICLES]
+    if not core or any(w.rstrip(".").casefold() in _TECH_WORDS for w in core):
+        return False
+    before = text[:start].rstrip()
+    after = text[start + len(words[0]):].lstrip()
+    opens_a_sentence = (not before or before[-1] in _QUOTES) and after[:1] not in ("", *_QUOTES)
+    named = core[1:] if opens_a_sentence and core[0] is words[0] else core
+    return any(w[0].isupper() and not w.isupper() for w in named)
+
+
+def _drop_shell_noise(
+    results: list[tuple[str, list[Detection]]],
+) -> list[tuple[str, list[Detection]]]:
+    """Model detections in a shell command that do not read as a name are dropped.
+
+    A certain detection (score 1.0: a `deny` term or custom pattern labelled PERSON...)
+    is the user's own rule and always stays."""
+    return [(chunk, [d for d in dets if d.entity_type not in _NER_TYPES or d.score >= 1.0
+                     or _reads_as_a_name(chunk, d.start, d.end)])
+            for chunk, dets in results]
+
+
 def _types(results: list[tuple[str, list[Detection]]]) -> Counter:
     return Counter(d.entity_type for _, dets in results for d in dets)
 
@@ -255,7 +311,10 @@ def run_pre_tool_use() -> None:
                 raise config_error
             if texts is None:
                 return  # tool not covered; no decision -> allow
-            found = _types(_analyze(config, event, texts))
+            results = _analyze(config, event, texts)
+            if tool in _SHELL_TOOLS:
+                results = _drop_shell_noise(results)
+            found = _types(results)
     except _FAILURES as exc:
         if config.hook_on_error == "open":
             return
