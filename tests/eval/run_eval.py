@@ -14,6 +14,11 @@ Metrics, per entity type:
   precision  detections overlapping a gold span of the same type
   leak-free  gold spans fully covered by detections of *any* type (what matters
              for privacy: a PERSON tokenized as LOCATION is still hidden)
+
+Shell commands (shell_commands.jsonl) are scored the way the tool hook sees them, after
+its command-line filter:
+  clean      commands without PII that raise no detection (a false alarm stops the agent)
+  recall     gold spans in commands with PII that are still detected
 """
 
 from __future__ import annotations
@@ -32,6 +37,7 @@ from pii_scrub.engine import ScrubEngine
 
 HERE = Path(__file__).parent
 CORPUS = HERE / "corpus.jsonl"
+SHELL_CORPUS = HERE / "shell_commands.jsonl"
 THRESHOLDS = HERE / "thresholds.json"
 THRESHOLDS_BY_BACKEND = {"gliner": HERE / "thresholds-gliner.json"}
 SMALL_MODELS = {
@@ -122,6 +128,72 @@ def evaluate(cases: list[dict], models: dict[str, str], backend: str = "spacy") 
     return report
 
 
+@dataclass
+class ShellReport:
+    commands: int = 0    # commands without PII
+    clean: int = 0       # of those, no detection after the hook's filter
+    unfiltered: int = 0  # of those, no detection before it
+    gold: int = 0
+    found: int = 0
+    false_alarms: list[str] = field(default_factory=list)
+    misses: list[str] = field(default_factory=list)
+
+    @property
+    def clean_rate(self) -> float:
+        return self.clean / self.commands if self.commands else 1.0
+
+    @property
+    def recall(self) -> float:
+        return self.found / self.gold if self.gold else 1.0
+
+
+def evaluate_shell(cases: list[dict], models: dict[str, str],
+                   backend: str = "spacy") -> ShellReport:
+    """Score shell commands as the pre-tool-use hook does for Bash / bash / powershell."""
+    from pii_scrub.hooks._common import _drop_shell_noise
+
+    if backend == "spacy":
+        models = available_models(models)
+    engine = ScrubEngine(Config(languages=list(models), models=models, ner_backend=backend))
+    report = ShellReport()
+    for case in cases:
+        text = case["text"]
+        raw = engine.detect(text)
+        ((_, kept),) = _drop_shell_noise([(text, raw)])
+        gold = gold_spans(case)
+        if not gold:
+            report.commands += 1
+            report.unfiltered += not raw
+            report.clean += not kept
+            if kept:
+                found = ", ".join(f"{d.entity_type} {text[d.start:d.end]!r}" for d in kept)
+                report.false_alarms.append(f"[{case['id']}] {text!r}: {found}")
+        for entity, start, end in gold:
+            hit = any(_overlap((d.start, d.end), (start, end)) for d in kept)
+            report.gold += 1
+            report.found += hit
+            if not hit:
+                report.misses.append(f"[{case['id']}] LEAK {entity}: {text[start:end]!r}")
+    return report
+
+
+def format_shell_report(report: ShellReport, verbose: bool = False) -> str:
+    rows = [f"shell commands: {report.clean}/{report.commands} clean "
+            f"({report.unfiltered} before the hook's filter), "
+            f"recall {report.found}/{report.gold}"]
+    if verbose:
+        rows += ["", "Shell false alarms:", *report.false_alarms,
+                 "", "Shell misses:", *report.misses]
+    return "\n".join(rows)
+
+
+def check_shell_gate(report: ShellReport, thresholds: dict) -> list[str]:
+    floors = thresholds.get("SHELL", {})
+    values = {"clean": report.clean_rate, "recall": report.recall}
+    return [f"SHELL {metric} {values[metric]:.2f} < {floor:.2f}"
+            for metric, floor in floors.items() if values[metric] + 1e-9 < floor]
+
+
 def _covered(start: int, end: int, spans: list[tuple[int, int]]) -> bool:
     """Whether [start, end) is fully inside the union of `spans`."""
     pos = start
@@ -148,6 +220,8 @@ def check_gate(report: Report, thresholds: dict) -> list[str]:
     """Return failure messages for every metric below its threshold."""
     failures = []
     for entity, floors in thresholds.items():
+        if entity == "SHELL":
+            continue  # see check_shell_gate
         st = report.total if entity == "ALL" else report.per_entity.get(entity, Stats())
         for metric, floor in floors.items():
             value = getattr(st, metric)
@@ -174,9 +248,12 @@ def main(argv: list[str] | None = None) -> int:
               file=sys.stderr)
     report = evaluate(load_corpus(), models, args.backend)
     print(format_report(report, args.verbose))
+    shell = evaluate_shell(load_corpus(SHELL_CORPUS), models, args.backend)
+    print("\n" + format_shell_report(shell, args.verbose))
     if args.gate:
         path = THRESHOLDS_BY_BACKEND.get(args.backend, THRESHOLDS)
-        failures = check_gate(report, json.loads(path.read_text("utf-8")))
+        thresholds = json.loads(path.read_text("utf-8"))
+        failures = check_gate(report, thresholds) + check_shell_gate(shell, thresholds)
         if failures:
             print("\nGATE FAILED:\n  " + "\n  ".join(failures), file=sys.stderr)
             return 1

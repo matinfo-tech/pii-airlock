@@ -1,0 +1,79 @@
+{"id": "clean-01", "text": "npm test", "pii": []}
+{"id": "clean-02", "text": "cat customer.txt", "pii": []}
+{"id": "clean-03", "text": "git status", "pii": []}
+{"id": "clean-04", "text": "git log --oneline -5", "pii": []}
+{"id": "clean-05", "text": "ls -la", "pii": []}
+{"id": "clean-06", "text": "npm install", "pii": []}
+{"id": "clean-07", "text": "npm run build", "pii": []}
+{"id": "clean-08", "text": "pytest -q", "pii": []}
+{"id": "clean-09", "text": "python -m pytest tests/test_hook.py -k copilot", "pii": []}
+{"id": "clean-10", "text": "cargo build --release", "pii": []}
+{"id": "clean-11", "text": "docker compose up -d", "pii": []}
+{"id": "clean-12", "text": "grep -rn \"TODO\" src/", "pii": []}
+{"id": "clean-13", "text": "cd docs && npm run build", "pii": []}
+{"id": "clean-14", "text": "git commit -m \"Fix login redirect\"", "pii": []}
+{"id": "clean-15", "text": "git push origin main", "pii": []}
+{"id": "clean-16", "text": "make test", "pii": []}
+{"id": "clean-17", "text": "pip install -r requirements.txt", "pii": []}
+{"id": "clean-18", "text": "rm -rf node_modules dist", "pii": []}
+{"id": "clean-19", "text": "curl -s https://api.github.com/repos/foo/bar | jq .name", "pii": []}
+{"id": "clean-20", "text": "find . -name \"*.py\" -newer setup.py", "pii": []}
+{"id": "clean-21", "text": "kubectl get pods -n staging", "pii": []}
+{"id": "clean-22", "text": "terraform plan -out tfplan", "pii": []}
+{"id": "clean-23", "text": "go test ./...", "pii": []}
+{"id": "clean-24", "text": "yarn lint --fix", "pii": []}
+{"id": "clean-25", "text": "sed -n 1,40p README.md", "pii": []}
+{"id": "clean-26", "text": "git checkout -b feature/user-profile", "pii": []}
+{"id": "clean-27", "text": "python manage.py migrate", "pii": []}
+{"id": "clean-28", "text": "npx prettier --write src/App.tsx", "pii": []}
+{"id": "clean-29", "text": "echo hello", "pii": []}
+{"id": "clean-30", "text": "cat package.json | head -20", "pii": []}
+{"id": "clean-31", "text": "docker build -t myapp:latest .", "pii": []}
+{"id": "clean-32", "text": "ssh deploy@staging \"systemctl restart nginx\"", "pii": []}
+{"id": "clean-33", "text": "git diff HEAD~1 -- src/components/Header.vue", "pii": []}
+{"id": "clean-34", "text": "ruff check pii_scrub tests", "pii": []}
+{"id": "clean-35", "text": "uv run pytest", "pii": []}
+{"id": "clean-36", "text": "brew install ripgrep", "pii": []}
+{"id": "clean-37", "text": "tail -f /var/log/nginx/access.log", "pii": []}
+{"id": "clean-38", "text": "Show customer.txt", "pii": []}
+{"id": "clean-39", "text": "Run tests", "pii": []}
+{"id": "clean-40", "text": "List files in current directory", "pii": []}
+{"id": "clean-41", "text": "Install package dependencies", "pii": []}
+{"id": "clean-42", "text": "Show working tree status", "pii": []}
+{"id": "clean-43", "text": "Build the Docker image", "pii": []}
+{"id": "clean-44", "text": "Check Python version", "pii": []}
+{"id": "clean-45", "text": "git log --author=\"dependabot\" --since=\"2 weeks ago\"", "pii": []}
+{"id": "clean-46", "text": "gh pr create --title \"Add dark mode\" --body \"Closes #12\"", "pii": []}
+{"id": "clean-47", "text": "docker run --rm -p 8080:80 nginx:alpine", "pii": []}
+{"id": "clean-48", "text": "export NODE_ENV=production && node server.js", "pii": []}
+{"id": "clean-49", "text": "git rebase -i HEAD~3", "pii": []}
+{"id": "clean-50", "text": "python3 -c \"import sys; print(sys.version)\"", "pii": []}
+{"id": "clean-51", "text": "psql -U postgres -d appdb -c \"SELECT count(*) FROM users\"", "pii": []}
+{"id": "clean-52", "text": "aws s3 sync ./dist s3://my-bucket --delete", "pii": []}
+{"id": "clean-53", "text": "chmod +x scripts/deploy.sh && ./scripts/deploy.sh", "pii": []}
+{"id": "clean-54", "text": "git stash && git pull --rebase && git stash pop", "pii": []}
+{"id": "clean-55", "text": "npm run lint -- --max-warnings 0", "pii": []}
+{"id": "clean-56", "text": "tar -czf backup.tar.gz ./data", "pii": []}
+{"id": "clean-57", "text": "Run the test suite", "pii": []}
+{"id": "clean-58", "text": "Commit the changes", "pii": []}
+{"id": "clean-59", "text": "Start the development server", "pii": []}
+{"id": "clean-60", "text": "Search for TODO comments", "pii": []}
+{"id": "clean-61", "text": "Check Git history for the file", "pii": []}
+{"id": "clean-62", "text": "Push branch to GitHub", "pii": []}
+{"id": "clean-63", "text": "Restart the Nginx service", "pii": []}
+{"id": "clean-64", "text": "git commit -m \"Update README and Dockerfile\"", "pii": []}
+{"id": "clean-65", "text": "git commit -m \"Refactor Header component to use Pinia store\"", "pii": []}
+{"id": "clean-66", "text": "mvn clean install -DskipTests", "pii": []}
+{"id": "clean-67", "text": "bundle exec rspec spec/models/user_spec.rb", "pii": []}
+{"id": "clean-68", "text": "php artisan migrate --seed", "pii": []}
+{"id": "clean-69", "text": "wc -l src/**/*.ts", "pii": []}
+{"id": "pii-01", "text": "git commit -m \"Thanks to Sarah Johnson for the review\"", "pii": [["PERSON", "Sarah Johnson"]]}
+{"id": "pii-02", "text": "grep -rn \"Michael Brown\" contracts/", "pii": [["PERSON", "Michael Brown"]]}
+{"id": "pii-03", "text": "echo \"Invoice for Emily Clark, London office\" >> notes.txt", "pii": [["LOCATION", "London"]]}
+{"id": "pii-04", "text": "mail -s \"Contract\" sarah.johnson@acme-corp.ch < body.txt", "pii": [["EMAIL_ADDRESS", "sarah.johnson@acme-corp.ch"]]}
+{"id": "pii-05", "text": "curl -d \"iban=CH93 0076 2011 6238 5295 7\" https://pay.acme-corp.ch/api", "pii": [["IBAN_CODE", "CH93 0076 2011 6238 5295 7"]]}
+{"id": "pii-06", "text": "sqlite3 crm.db \"SELECT * FROM clients WHERE name = 'David Miller'\"", "pii": [["PERSON", "David Miller"]]}
+{"id": "pii-07", "text": "echo \"call +41 79 555 12 34 tomorrow\"", "pii": [["PHONE_NUMBER", "+41 79 555 12 34"]]}
+{"id": "pii-08", "text": "Send the contract to Sarah Johnson", "pii": [["PERSON", "Sarah Johnson"]]}
+{"id": "pii-09", "text": "ssh admin@203.0.113.42 \"uptime\"", "pii": [["IP_ADDRESS", "203.0.113.42"]]}
+{"id": "pii-10", "text": "echo \"Carte 4111 1111 1111 1111 pour Camille Lefebvre\" | pbcopy", "pii": [["CREDIT_CARD", "4111 1111 1111 1111"], ["PERSON", "Camille Lefebvre"]]}
