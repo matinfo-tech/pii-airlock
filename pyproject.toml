@@ -55,7 +55,7 @@ pii-airlock = "pii_scrub.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/matinfo-tech/pii-airlock"
-Documentation = "https://matinfo-tech.github.io/pii-airlock/"
+Documentation = "https://pii-airlock.matinfo.tech/"
 Issues = "https://github.com/matinfo-tech/pii-airlock/issues"
 Changelog = "https://github.com/matinfo-tech/pii-airlock/blob/main/CHANGELOG.md"
 
