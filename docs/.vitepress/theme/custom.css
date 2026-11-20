@@ -55,6 +55,19 @@
   transform: translateY(-2px);
 }
 
+/* Feature icons: brand-tinted plate instead of the default grey */
+.VPFeature .VPImage {
+  position: relative;
+  z-index: 1;
+}
+.VPFeature .icon {
+  background-color: var(--vp-c-brand-soft);
+  border-radius: 10px;
+}
+.VPFeature .details code {
+  font-size: 0.85em;
+}
+
 /* Hero buttons: room for the four fork actions */
 .VPHero .actions {
   row-gap: 10px;
