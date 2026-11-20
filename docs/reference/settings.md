@@ -64,4 +64,4 @@ See [Placeholders explained](/customize/placeholders).
 ## Full reference
 
 The complete annotated file is
-[`config.default.yaml`](https://github.com/matinfo/pii-airlock/blob/main/pii_scrub/config.default.yaml).
+[`config.default.yaml`](https://github.com/matinfo-tech/pii-airlock/blob/main/pii_scrub/config.default.yaml).

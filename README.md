@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/matinfo/pii-airlock/main/docs/public/logo.svg" alt="pii-airlock logo" width="96" height="96">
+<img src="https://raw.githubusercontent.com/matinfo-tech/pii-airlock/main/docs/public/logo.svg" alt="pii-airlock logo" width="96" height="96">
 
 # pii-airlock
 
@@ -8,7 +8,7 @@
 
 A local privacy layer for AI tools: swaps personal data for placeholders before requests leave your machine, then restores the originals in the reply.
 
-[![CI](https://github.com/matinfo/pii-airlock/actions/workflows/ci.yml/badge.svg)](https://github.com/matinfo/pii-airlock/actions/workflows/ci.yml)
+[![CI](https://github.com/matinfo-tech/pii-airlock/actions/workflows/ci.yml/badge.svg)](https://github.com/matinfo-tech/pii-airlock/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/pii-airlock.svg)](https://pypi.org/project/pii-airlock/)
 ![Python](https://img.shields.io/badge/python-3.10%E2%80%933.14-blue.svg)
 ![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey.svg)
@@ -18,7 +18,7 @@ A local privacy layer for AI tools: swaps personal data for placeholders before 
 
 Works with **Claude Code · GitHub Copilot · Codex · Cursor · Aider · Gemini · any OpenAI-compatible client**
 
-**[📖 User guide](https://matinfo.github.io/pii-airlock/) · [Quickstart](#2-minute-quickstart) · [Install](#install) · [Gateway](#universal-gateway-any-provider) · [CLI](#cli-usage) · [Copilot](#github-copilot) · [doctor](#doctor-health-checks) · [Troubleshooting](#troubleshooting) · [All agents →](AGENTS.md)**
+**[📖 User guide](https://matinfo-tech.github.io/pii-airlock/) · [Quickstart](#2-minute-quickstart) · [Install](#install) · [Gateway](#universal-gateway-any-provider) · [CLI](#cli-usage) · [Copilot](#github-copilot) · [doctor](#doctor-health-checks) · [Troubleshooting](#troubleshooting) · [All agents →](AGENTS.md)**
 
 </div>
 
@@ -35,7 +35,7 @@ John Smith (john@acme.com) → <PERSON_482913> (<EMAIL_ADDRESS_093117>)
 Runs on **macOS, Linux, Windows** (Python ≥ 3.10). Built on [Microsoft Presidio](https://microsoft.github.io/presidio/).
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/matinfo/pii-airlock/main/docs/public/demo.gif"
+  <img src="https://raw.githubusercontent.com/matinfo-tech/pii-airlock/main/docs/public/demo.gif"
        alt="Terminal demo: pii-airlock scrubs a name and an email from a prompt, then restores them in the reply"
        width="760">
 </p>
@@ -143,7 +143,7 @@ so it cannot clash with your own Python. You never activate it: `pii-airlock` on
 Latest from source (before a release lands on PyPI):
 
 ```bash
-pipx install git+https://github.com/matinfo/pii-airlock
+pipx install git+https://github.com/matinfo-tech/pii-airlock
 ```
 
 Optional format support (plain text, CSV and JSON work out of the box):
@@ -321,7 +321,7 @@ all, so no `--map` is needed.
 `pii-airlock init` installs them in `~/.claude/settings.json`. Or use the plugin instead:
 
 ```
-/plugin marketplace add matinfo/pii-airlock
+/plugin marketplace add matinfo-tech/pii-airlock
 /plugin install pii-airlock@pii-airlock
 ```
 
@@ -682,7 +682,7 @@ A mapping file pairs every token with the **original personal data**.
 ## Development
 
 ```bash
-git clone https://github.com/matinfo/pii-airlock
+git clone https://github.com/matinfo-tech/pii-airlock
 cd pii-airlock
 pip install -e ".[dev]"
 ruff check .
@@ -702,7 +702,7 @@ echo "Call John Smith at john@example.com" | pii-airlock scrub
 ## Community
 
 - 🧩 **[Integrate with your agent](AGENTS.md)** — Claude Code, GitHub Copilot, Cursor, Codex, Gemini, Continue, Aider, …
-- ❓ **Need help?** Open a **[bug report](https://github.com/matinfo/pii-airlock/issues/new/choose)** with:
+- ❓ **Need help?** Open a **[bug report](https://github.com/matinfo-tech/pii-airlock/issues/new/choose)** with:
   - `pii-airlock --version`
   - your install method (`pipx` or `pip`)
   - the exact command and full error output
@@ -716,4 +716,4 @@ If pii-airlock helps you keep PII out of your AI tools, a ⭐ helps others find 
 
 ## License
 
-[MIT](LICENSE) © pii-airlock contributors
+[MIT](LICENSE) © Matinfo

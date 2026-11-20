@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vitepress'
 
-const repo = 'https://github.com/matinfo/pii-airlock'
-const site = 'https://matinfo.github.io/pii-airlock'
+const repo = 'https://github.com/matinfo-tech/pii-airlock'
+const site = 'https://matinfo-tech.github.io/pii-airlock'
 // Single source of truth for the version shown in the nav.
 const version =
   readFileSync(new URL('../../pii_scrub/__init__.py', import.meta.url), 'utf-8').match(
@@ -12,7 +12,7 @@ const version =
 export default defineConfig({
   title: 'pii-airlock',
   description: 'Keep real personal data out of your AI prompts. Local, reversible, no cloud.',
-  // Served from https://matinfo.github.io/pii-airlock/
+  // Served from https://matinfo-tech.github.io/pii-airlock/
   base: '/pii-airlock/',
   cleanUrls: true,
   lastUpdated: true,
@@ -112,7 +112,7 @@ export default defineConfig({
     outline: { level: [2, 3], label: 'On this page' },
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'pii-airlock contributors',
+      copyright: 'Matinfo',
     },
   },
 })
