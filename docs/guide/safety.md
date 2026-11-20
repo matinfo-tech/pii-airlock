@@ -9,6 +9,9 @@ Read this page once. It explains what you can rely on and what you cannot.
   detector would have missed alone, and even earlier ones.
 - **Local detection.** Spotting personal data never uses the network. Only the gateway forwards traffic, and only after cleaning.
 - **Safe defaults.** If detection fails, hooks treat the input as sensitive. The gateway refuses requests it does not understand.
+- **Same value, same placeholder.** Within a mapping, and with stable placeholders across requests, so the AI can follow who is who.
+- **Safe re-insertion.** Restored values go back through proper JSON encoding. A value with quotes, newlines or `<…>`
+  cannot corrupt a request.
 
 ## What it cannot promise
 
@@ -25,7 +28,11 @@ Specific gaps:
 - **Copilot's default models and inline suggestions** cannot be protected at all.
 - **Websites and mobile apps** cannot be pointed at the gateway.
 - **Claude's `thinking` blocks** are signed, so they are neither cleaned nor restored.
-- **Word files:** formatting inside changed paragraphs is lost. **PDFs:** you get text out, not a PDF.
+- **Word files:** formatting inside changed paragraphs is lost (they are rewritten as a single run). **PDFs:** you get text out, not a PDF.
+- **Other gateway endpoints** that carry a body are refused unless you list them in `passthrough_paths`.
+- **Gemini array streaming** (without `alt=sse`) is buffered, then restored as one response.
+- **Every configured language** is analysed for every text and the results merged, so mixed English/French text is
+  covered, at the cost of one pass per language.
 
 ## The map file holds the real data
 
@@ -39,8 +46,15 @@ When you clean a file with `scrub`, the mapping stores the original values.
 
 The gateway keeps its mapping **in memory only** and forgets it after each response.
 
-On Windows, files cannot be set to owner-only the way they are on macOS and Linux. They inherit your account's
-default permissions, which are normally private in your home folder.
+How the encryption works: AES-256-GCM, with a key derived from `token.key`. A copied, synced or backed-up project
+folder is useless without that key, so keep `token.key` out of backups and never put it in the repository.
+Losing it makes the maps unreadable. See [Settings](/reference/settings#mapping-storage-and-encryption).
+
+The repository's own `.gitignore` also excludes `*.pii-map.json` and `*.pii-map.*`.
+
+On Windows, files cannot be set to owner-only the way they are on macOS and Linux (mapping files are created
+with mode `0600` on POSIX). They inherit your account's default permissions, which are normally private in your
+home folder. Treat mapping files as secrets regardless.
 
 ## Ways to improve accuracy
 

@@ -20,15 +20,16 @@ checked recognizers. Use these type names with [`pii-airlock action`](/customize
 
 These check the number's built-in check digit, so a random number does not trigger them.
 
-| Type | What it is |
-|---|---|
-| `FR_NIR` | French social security number |
-| `CH_AHV` | Swiss AHV/AVS number |
-| `FR_SIRET`, `FR_SIREN` | French business IDs |
-| `DE_TAX_ID` | German tax ID (needs a nearby keyword such as `Steuer-ID`) |
-| `DE_TAX_NUMBER` | German `Steuernummer` (needs a keyword) |
-| `IT_VAT_CODE` | Italian VAT number |
-| `SECRET` | Keys for AWS, GitHub, Slack, OpenAI, Anthropic, Google and Stripe, plus JWTs |
+| Type | What it is | How it is checked |
+|---|---|---|
+| `FR_NIR` | French social security number | mod-97 key (including Corsica 2A/2B) |
+| `CH_AHV` | Swiss AHV/AVS number `756.xxxx.xxxx.xx` | EAN-13 check digit |
+| `FR_SIRET`, `FR_SIREN` | French business IDs (sole traders count as people) | Luhn. SIREN needs a keyword. |
+| `DE_TAX_ID` | German tax ID (needs a nearby keyword such as `Steuer-ID` or `IdNr`) | ISO 7064 MOD 11,10 |
+| `DE_TAX_NUMBER` | German `Steuernummer`, for example `21/815/08150` (needs a keyword) | format |
+| `IT_VAT_CODE` | Italian Partita IVA (with the `IT` prefix or a `P.IVA` keyword) | Luhn |
+| `PHONE_NUMBER` | International `+CC …` in any language, plus FR, CH, DE and IT national formats such as `06 12 34 56 78`, `079 123 45 67`, `030 12345678`, `333 1234567` | format |
+| `SECRET` | Keys for AWS, GitHub, Slack, OpenAI, Anthropic, Google and Stripe, JWTs, private keys, passwords in URLs, `password=…` values | format |
 
 ## Ignored by default
 

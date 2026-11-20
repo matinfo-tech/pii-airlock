@@ -41,6 +41,26 @@ You pick one depending on the tool you use. [Pick your setup](/use/pick-your-set
 | What it does | Swaps and restores automatically | Stops and warns you before personal data is sent |
 | Best for | Chat apps, SDKs, Cursor, Codex, Aider | Claude Code and Copilot working on your files |
 
+## The project folder: `.pii-airlock/`
+
+Like `.git/`, one folder holds everything pii-airlock knows about a project, and its presence is the on switch.
+`pii-airlock init` creates it.
+
+```text
+my-project/.pii-airlock/
+  config.yaml   your rules: allow/deny lists, actions, patterns    shared with the team (committed)
+  .gitignore    ignores everything else                            committed
+  maps/         the keys to undo a cleanup (real values, encrypted)  local only
+  off           present while paused (`pii-airlock off`)             local only
+```
+
+- The hooks are installed once for your user and **do nothing outside a project folder**, so unrelated projects are
+  untouched. The folder is found from any subdirectory.
+- The secret key behind your placeholders and your trust decisions stay in `~/.local/state/pii-airlock/`, never in
+  the project. Encrypted maps next to their key would protect nothing.
+- To guard every directory instead, set `activation: always` in `~/.config/pii-airlock/config.yaml`.
+- The gateway has no notion of project: it cleans whatever is sent to it.
+
 ## Next step
 
 [Quick start (5 minutes)](/guide/quick-start)

@@ -121,6 +121,11 @@ To add other languages, see [Add a language](/customize/languages).
 pipx install git+https://github.com/matinfo-tech/pii-airlock
 ```
 
+## Supported platforms
+
+Tested in CI on **Linux, macOS and Windows**: Python 3.10 to 3.14 on Linux, 3.12 and 3.13 on macOS and Windows.
+Python 3.10 or newer is required.
+
 ## Update and uninstall
 
 ```bash
