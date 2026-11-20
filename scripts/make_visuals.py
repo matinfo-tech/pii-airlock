@@ -157,22 +157,24 @@ def og_svg() -> str:
         '<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" '
         'viewBox="0 0 1280 640">',
         '<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">',
-        '<stop offset="0" stop-color="#0b1220"/><stop offset="1" stop-color="#1e3a8a"/>',
+        '<stop offset="0" stop-color="#0b1220"/><stop offset="1" stop-color="#134e4a"/>',
         '</linearGradient></defs>',
         '<rect width="1280" height="640" fill="url(#bg)"/>',
+        # The logo: keep in sync with docs/public/logo.svg (candidate B, "the port").
         '<g transform="translate(84 44) scale(2)">',
-        '<rect x="6" y="6" width="52" height="52" rx="14" fill="#3b82f6"/>',
-        '<path d="M32 14 16 21v10c0 10 7 16 16 19 9-3 16-9 16-19V21z" fill="#fff"/>',
-        '<path d="m25 32 5 5 10-11" stroke="#3b82f6" stroke-width="4" stroke-linecap="round" '
-        'stroke-linejoin="round" fill="none"/>',
+        '<rect x="4" y="4" width="56" height="56" rx="16" fill="#0f172a"/>',
+        '<circle cx="32" cy="32" r="19" fill="none" stroke="#2dd4bf" stroke-width="4"/>',
+        '<circle cx="32" cy="32" r="10.5" fill="#2dd4bf"/>',
+        '<g fill="#0f172a"><circle cx="32" cy="29" r="3.1"/>',
+        '<path d="M30.7 30.8 29.6 37.2h4.8l-1.1-6.4z"/></g>',
         '</g>',
         text(96, 318, 104, "#fff", "pii-airlock", ' font-weight="700"'),
         text(96, 388, 38, "#cbd5e1", "Keep real personal data out of your AI prompts."),
-        text(96, 436, 30, "#93c5fd", "Local. Reversible. No cloud."),
+        text(96, 436, 30, "#5eead4", "Local. Reversible. No cloud."),
         '<rect x="96" y="484" width="1088" height="84" rx="14" fill="#0f172a" opacity="0.85"/>',
         f'<text x="124" y="535" font-family="{MONO}" font-size="22" '
         f'xml:space="preserve">{mapping}</text>',
-        text(1184, 112, 26, "#93c5fd", "Claude Code &#183; Codex &#183; Cursor &#183; Copilot",
+        text(1184, 112, 26, "#5eead4", "Claude Code &#183; Codex &#183; Cursor &#183; Copilot",
              ' text-anchor="end"'),
         "</svg>",
     ])
