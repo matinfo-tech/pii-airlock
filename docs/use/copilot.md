@@ -62,4 +62,4 @@ Your own API key is forwarded to the provider and never logged.
 
 The Copilot hook follows GitHub's published specification, but has not yet been tested against a live Copilot
 session. If a tool call slips through, please
-[open an issue](https://github.com/matinfo/pii-airlock/issues/new/choose) with the hook payload.
+[open an issue](https://github.com/matinfo-tech/pii-airlock/issues/new/choose) with the hook payload.

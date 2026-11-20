@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- The repository moved to the `matinfo-tech` organisation:
+  <https://github.com/matinfo-tech/pii-airlock>. The user guide is now at
+  <https://matinfo-tech.github.io/pii-airlock/> and the Claude Code plugin is added with
+  `/plugin marketplace add matinfo-tech/pii-airlock`. The package author is now Matinfo.
+
 ## [0.8.0] - 2026-11-06
 
 ### Added
@@ -55,7 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.0] - 2026-10-31
 
 ### Added
-- Claude Code plugin: `/plugin marketplace add matinfo/pii-airlock`, then
+- Claude Code plugin: `/plugin marketplace add matinfo-tech/pii-airlock`, then
   `/plugin install pii-airlock@pii-airlock`. Registers the hooks, adds a `/pii-airlock:setup`
   skill, and fails closed (blocks) when the CLI is not installed. A test keeps the plugin's
   hooks and version in step with `install-hook` and `pyproject.toml`.
@@ -275,14 +281,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `install-hook`.
 - Config override chain: bundled defaults → user → project → CLI flags.
 
-[Unreleased]: https://github.com/matinfo/pii-airlock/compare/v0.8.0...HEAD
-[0.8.0]: https://github.com/matinfo/pii-airlock/compare/v0.7.0...v0.8.0
-[0.7.0]: https://github.com/matinfo/pii-airlock/compare/v0.6.0...v0.7.0
-[0.6.0]: https://github.com/matinfo/pii-airlock/compare/v0.5.0...v0.6.0
-[0.5.0]: https://github.com/matinfo/pii-airlock/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/matinfo/pii-airlock/compare/v0.2.3...v0.4.0
-[0.2.3]: https://github.com/matinfo/pii-airlock/compare/v0.2.2...v0.2.3
-[0.2.2]: https://github.com/matinfo/pii-airlock/compare/v0.2.1...v0.2.2
-[0.2.1]: https://github.com/matinfo/pii-airlock/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/matinfo/pii-airlock/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/matinfo/pii-airlock/releases/tag/v0.1.0
+[Unreleased]: https://github.com/matinfo-tech/pii-airlock/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/matinfo-tech/pii-airlock/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/matinfo-tech/pii-airlock/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/matinfo-tech/pii-airlock/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/matinfo-tech/pii-airlock/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/matinfo-tech/pii-airlock/compare/v0.2.3...v0.4.0
+[0.2.3]: https://github.com/matinfo-tech/pii-airlock/compare/v0.2.2...v0.2.3
+[0.2.2]: https://github.com/matinfo-tech/pii-airlock/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/matinfo-tech/pii-airlock/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/matinfo-tech/pii-airlock/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/matinfo-tech/pii-airlock/releases/tag/v0.1.0

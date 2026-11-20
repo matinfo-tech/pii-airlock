@@ -29,7 +29,7 @@ around a block, never open the mapping files.
 Inside Claude Code:
 
 ```text
-/plugin marketplace add matinfo/pii-airlock
+/plugin marketplace add matinfo-tech/pii-airlock
 /plugin install pii-airlock@pii-airlock
 ```
 

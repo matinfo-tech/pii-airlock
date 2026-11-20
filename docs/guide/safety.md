@@ -51,4 +51,4 @@ default permissions, which are normally private in your home folder.
 
 ## Reporting a vulnerability
 
-See the [security policy](https://github.com/matinfo/pii-airlock/blob/main/SECURITY.md).
+See the [security policy](https://github.com/matinfo-tech/pii-airlock/blob/main/SECURITY.md).

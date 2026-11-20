@@ -105,7 +105,7 @@ python3 -m venv .venv
 
 ## Still stuck?
 
-[Open a bug report](https://github.com/matinfo/pii-airlock/issues/new/choose) with:
+[Open a bug report](https://github.com/matinfo-tech/pii-airlock/issues/new/choose) with:
 
 - the output of `pii-airlock --version`
 - how you installed it (pipx, Homebrew or pip)

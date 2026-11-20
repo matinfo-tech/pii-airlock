@@ -44,7 +44,7 @@ an individual is officially representing the community in public spaces.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the maintainers at **m.meylan@gmail.com**. All complaints will be
+reported to the maintainers at **dev@matinfo.tech**. All complaints will be
 reviewed and investigated promptly and fairly. Community leaders are obligated to
 respect the privacy and security of the reporter of any incident.
 

@@ -97,7 +97,7 @@ You must activate that environment every time before using `pii-airlock`.
 Inside Claude Code:
 
 ```text
-/plugin marketplace add matinfo/pii-airlock
+/plugin marketplace add matinfo-tech/pii-airlock
 /plugin install pii-airlock@pii-airlock
 ```
 
@@ -118,7 +118,7 @@ To add other languages, see [Add a language](/customize/languages).
 ## Install the newest unreleased version
 
 ```bash
-pipx install git+https://github.com/matinfo/pii-airlock
+pipx install git+https://github.com/matinfo-tech/pii-airlock
 ```
 
 ## Update and uninstall

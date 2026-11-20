@@ -55,4 +55,4 @@ Yes. macOS, Linux and Windows are tested in CI. The Claude Code **plugin** needs
 ## How can I contribute?
 
 Adding a language or a provider adapter is a good first contribution.
-See [CONTRIBUTING](https://github.com/matinfo/pii-airlock/blob/main/CONTRIBUTING.md).
+See [CONTRIBUTING](https://github.com/matinfo-tech/pii-airlock/blob/main/CONTRIBUTING.md).
