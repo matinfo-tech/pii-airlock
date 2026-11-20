@@ -1,6 +1,6 @@
 # Quick start
 
-About five minutes. You will install pii-airlock, start it, and point one AI tool at it.
+About five minutes. Three steps that everyone does, then one step that depends on your tool.
 
 ::: info Before you begin
 You need a **terminal**: Terminal on macOS, a shell on Linux, or PowerShell on Windows.
@@ -25,7 +25,7 @@ pipx install "pii-airlock[proxy]"
 ```
 
 pipx puts pii-airlock in its own private space, so it never interferes with your other Python projects.
-On macOS you can use Homebrew instead; see [Install, all options](/guide/install).
+Prefer Homebrew or pip? See [Install](/guide/install) and [Install, advanced](/reference/install-advanced).
 
 ## 3. Guard your project
 
@@ -44,45 +44,27 @@ Done. `pii-airlock status` shows the setup; `pii-airlock off` pauses it here.
 
 If a line says `[needs action]`, run what it says, then `pii-airlock init` again.
 
-**Using Claude Code or Copilot? You are done.** In this project, prompts and tool calls with
-personal data are now stopped before they leave your computer. Run `pii-airlock init` in each
-project you want guarded. The steps below are for chat apps and SDKs.
+## 4. One last step, depending on your tool
 
-## 4. Start the gateway
+- **Claude Code or GitHub Copilot? You are done.** In this project, prompts and tool calls with
+  personal data are now stopped before they leave your computer. Run `pii-airlock init` in each
+  project you want guarded. Details: [Claude Code](/use/claude-code) · [Copilot](/use/copilot).
+- **Cursor, Codex, Aider, an SDK, or another AI app?** Continue with the
+  [gateway quick start](/guide/quick-start-gateway) — two more minutes.
+- **Just want to clean a file or some text?** [Clean a file or some text](/use/files-and-text).
+- **Not sure?** [Pick your setup](/use/pick-your-setup).
+
+## Try it with fake data
 
 ```bash
-pii-airlock proxy
+echo "Contact John Smith at john@example.com" | pii-airlock scrub
 ```
 
-Leave this terminal window open. The gateway now listens on your computer only, at `http://127.0.0.1:8745`.
-Nobody else on your network can reach it.
-
-## 5. Point your AI tool at it
-
-Open a **second** terminal and set the address for the tool you use. For OpenAI-style tools, including Codex:
-
-::: code-group
-```bash [macOS / Linux]
-export OPENAI_BASE_URL=http://127.0.0.1:8745/openai
-```
-```powershell [Windows PowerShell]
-$env:OPENAI_BASE_URL = "http://127.0.0.1:8745/openai"
-```
-:::
-
-Then start your tool **from that same terminal**. The setting only applies to programs launched from it.
-
-Using Claude Code, Copilot, Cursor or something else? Go to [Pick your setup](/use/pick-your-setup).
-
-## 6. Try it with fake data
-
-In your AI tool, send: `Write a short thank-you email to Jean Dupont, jean@example.com.`
-
-The answer should show **Jean Dupont** and **jean@example.com** as you typed them. The provider's logs show placeholders instead.
-If you do not have access to those logs, [Check that it works](/guide/check-it-works) has a test that needs no provider.
+You should see placeholders instead of the name and email. More tests, including one for the hooks
+and one for the gateway: [Check that it works](/guide/check-it-works).
 
 ## What now?
 
 - [Tell it what is sensitive](/customize/allow-and-deny) in your own work.
-- Read [Safety and limits](/guide/safety).
+- Read [Safety and limits](/guide/safety) once.
 - Stuck? [Troubleshooting](/guide/troubleshooting).

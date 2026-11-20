@@ -61,7 +61,6 @@ Start `pii-airlock proxy`, then point your AI client at it as described in
 still show them. Your provider's dashboard or logs should show placeholders such as `<EMAIL_ADDRESS_093117>`.
 
 ::: tip Where the mapping went
-`scrub` keeps the mapping (the real values, encrypted) in your project's `.pii-airlock/maps/`, or
-outside a project in `~/.local/state/pii-airlock/maps/`. That is how `restore` found it. Delete it
-when you no longer need to restore.
+`scrub` kept the mapping (the real values, encrypted) in `.pii-airlock/maps/`; that is how `restore` found it.
+See [Data handling](/reference/data-handling).
 :::

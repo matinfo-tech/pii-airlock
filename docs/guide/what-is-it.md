@@ -33,13 +33,9 @@ You can read more in [Placeholders explained](/customize/placeholders).
 
 ## Two ways to use it
 
-You pick one depending on the tool you use. [Pick your setup](/use/pick-your-setup) helps you choose.
-
-| | The gateway | Hooks |
-|---|---|---|
-| In plain words | A local address your AI app talks to instead of the provider | Guards built into Claude Code and Copilot |
-| What it does | Swaps and restores automatically | Stops and warns you before personal data is sent |
-| Best for | Chat apps, SDKs, Cursor, Codex, Aider | Claude Code and Copilot working on your files |
+There are two modes: **hooks** (checkpoints inside Claude Code and Copilot that stop you before personal data
+is sent) and the **gateway** (a local address any other AI app talks to, with automatic swap and restore).
+[Pick your setup](/use/pick-your-setup) tells you which one fits your tool.
 
 ## The project folder: `.pii-airlock/`
 

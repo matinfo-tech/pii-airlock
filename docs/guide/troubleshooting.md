@@ -67,12 +67,13 @@ Another copy is probably running. Stop it, or choose another port: `pii-airlock 
 ### Everything is blocked after installing the Claude Code plugin
 
 The plugin cannot find the `pii-airlock` command, and blocks everything by design. Install the program
-([Install, all options](/guide/install)), then restart Claude Code.
+([Install](/guide/install)), then restart Claude Code.
 
 ### It flags things that are not personal
 
 Teach it: `pii-airlock allow "the word"`. See [Tell it what is sensitive](/customize/allow-and-deny).
-You can also raise the confidence threshold for a type, for example `score_thresholds: {PERSON: 0.7}`.
+You can also raise the confidence threshold for a type, for example `score_thresholds: {PERSON: 0.7}`
+(see [Settings](/reference/settings#detection)).
 
 ### Hooks are slow
 

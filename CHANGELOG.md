@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reference material — gateway internals, hook settings, configuration, recognizers,
   tokens, troubleshooting — now lives only in the user guide at
   <https://pii-airlock.matinfo.tech/>, with deep links from the README.
+- The user guide is reorganised into two tiers. "Start here" is one linear path (what is
+  it → pick your setup → install → quick start per tool → check), and the detail moved
+  into collapsed "Advanced" sections. New pages: a gateway quick start, Install advanced,
+  The policy file and trust, Data handling (the single home for map/key/encryption
+  content) and a Glossary. The landing page now forks by tool. No existing URL changed.
 - `AGENTS.md` is now what the name means to coding agents: instructions for working on
   this repository. The per-tool integration guides it used to hold moved to the user
   guide (`use/gateway`, `use/copilot`).

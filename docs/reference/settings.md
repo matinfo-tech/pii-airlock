@@ -1,7 +1,7 @@
 # Settings
 
-Settings live in YAML files. See [Where settings live](/customize/allow-and-deny#where-settings-live) for the order.
-Most people only need the commands in [Tell it what is sensitive](/customize/allow-and-deny).
+Settings live in YAML files. See [The policy file and trust](/customize/policy-file) for where they live and
+how layers combine. Most people only need the commands in [Tell it what is sensitive](/customize/allow-and-deny).
 
 Example `.pii-airlock/config.yaml`:
 
@@ -13,16 +13,12 @@ entity_actions:
   IBAN_CODE: redact
 ```
 
-## Where the settings come from
-
 Lowest to highest priority:
 
 ```text
 bundled defaults → ~/.config/pii-airlock/config.yaml (you, every project)
   → <project>/.pii-airlock/config.yaml (this project) → command-line options
 ```
-
-`allow_list`, `deny_list` and `custom_patterns` add up across layers. Every other key is replaced by the later layer.
 
 ## Where it is active
 
@@ -78,19 +74,7 @@ See [Placeholders explained](/customize/placeholders).
 | `mapping_encryption` | `true` | Set `false` only for debugging |
 | `analysis_cache_size` | `2048` | Texts remembered so repeated history is not re-analysed. `0` turns it off. |
 
-## Mapping storage and encryption
-
-The `file` backend keeps real values on disk, so it **encrypts them at rest** with AES-256-GCM, using a key
-derived from `token.key` in `~/.local/state/pii-airlock/`.
-
-- A copied or backed-up `maps/` folder is useless without that key. Keep `token.key` out of backups.
-- Losing the key makes pending mappings unreadable. Gateway mappings only live for one request.
-- Plain files written by older versions still load.
-- `mapping_encryption: false` writes readable JSON for debugging. It is ignored in a project you have not trusted.
-- `pii-airlock scrub` encrypts its maps the same way, unless you pass `--map` (plain JSON where you said).
-
-`memory` stays the safest default for local use because mappings are ephemeral. Use `file` for debugging or
-operational inspection on self-hosted, higher-volume setups.
+How mappings are stored and encrypted, and what to do with the key: [Data handling](/reference/data-handling).
 
 ## Full reference
 

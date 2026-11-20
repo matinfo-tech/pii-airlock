@@ -16,7 +16,7 @@ A cheat sheet. Run any command with `--help` for the full list of options.
 | Command | What it does |
 |---|---|
 | `pii-airlock scrub [file]` | Replace personal data with placeholders. Reads standard input if no file is given. |
-| `pii-airlock restore [file] --map M` | Put the originals back using a map file |
+| `pii-airlock restore [file]` | Put the originals back. Finds the stored maps itself; `--map M` only for a map written elsewhere. |
 | `pii-airlock detect [file]` | List what would be found, change nothing |
 
 `scrub` options:
@@ -24,7 +24,7 @@ A cheat sheet. Run any command with `--help` for the full list of options.
 | Option | Meaning |
 |---|---|
 | `-o, --out FILE` | Write to a file instead of the screen |
-| `--map FILE` | Where to save the map used to restore |
+| `--map FILE` | Save the map elsewhere, as plain JSON ([data handling](/reference/data-handling)) |
 | `--no-map` | One-way cleanup |
 | `--encrypt-map` | Encrypt the map for this computer |
 | `--lang fr,en` | Languages to look for |
@@ -44,7 +44,6 @@ A cheat sheet. Run any command with `--help` for the full list of options.
 
 | Command | What it does |
 |---|---|
-| `pii-airlock init` | Guard this project (`.pii-airlock/`), install the user hooks once, get the models |
 | `pii-airlock status` | Is this project guarded, by which hooks, with which rules |
 | `pii-airlock off` / `on` | Pause / resume this project on this machine |
 | `pii-airlock install-hook` | Register hooks by hand: `--scope project\|user`, `--event tool\|prompt`, `--target copilot` |

@@ -5,7 +5,7 @@ that look at what is about to be sent and stop you when it contains personal dat
 
 ## Set it up: `pii-airlock init`
 
-First install the program ([Install, all options](/guide/install)). Then, in your project:
+First install the program ([Install](/guide/install)). Then, in your project:
 
 ```bash
 pii-airlock init
@@ -86,8 +86,8 @@ See [Tell it what is sensitive](/customize/allow-and-deny).
 
 ## Change how strict it is
 
-Put these in your project's `.pii-airlock/config.yaml` (see
-[Tell it what is sensitive](/customize/allow-and-deny).
+Put these in your project's `.pii-airlock/config.yaml` (all hook settings:
+[Settings](/reference/settings#hooks)).
 
 | Setting | Effect |
 |---|---|

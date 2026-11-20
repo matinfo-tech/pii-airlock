@@ -44,10 +44,18 @@ export default defineConfig({
   themeConfig: {
     logo: '/logo.svg',
     nav: [
-      { text: 'Get started', link: '/guide/quick-start' },
-      { text: 'Use it with…', link: '/use/pick-your-setup' },
+      { text: 'Get started', link: '/use/pick-your-setup' },
       { text: 'Help', link: '/guide/troubleshooting' },
-      { text: 'Reference', link: '/reference/commands' },
+      {
+        text: 'Advanced',
+        items: [
+          { text: 'Commands', link: '/reference/commands' },
+          { text: 'Settings', link: '/reference/settings' },
+          { text: 'What it detects', link: '/reference/detected-types' },
+          { text: 'Data handling', link: '/reference/data-handling' },
+          { text: 'Glossary', link: '/reference/glossary' },
+        ],
+      },
       {
         text: `v${version}`,
         items: [
@@ -62,44 +70,52 @@ export default defineConfig({
         text: 'Start here',
         items: [
           { text: 'What is pii-airlock?', link: '/guide/what-is-it' },
+          { text: 'Pick your setup', link: '/use/pick-your-setup' },
+          { text: 'Install', link: '/guide/install' },
           { text: 'Quick start (5 minutes)', link: '/guide/quick-start' },
-          { text: 'Install, all options', link: '/guide/install' },
+          { text: 'Quick start: the gateway', link: '/guide/quick-start-gateway' },
           { text: 'Check that it works', link: '/guide/check-it-works' },
         ],
       },
       {
-        text: 'Use it with your tools',
+        text: 'Everyday use',
         items: [
-          { text: 'Pick your setup', link: '/use/pick-your-setup' },
-          { text: 'Claude Code', link: '/use/claude-code' },
-          { text: 'GitHub Copilot', link: '/use/copilot' },
-          { text: 'Other AI apps and SDKs', link: '/use/gateway' },
           { text: 'Clean a file or some text', link: '/use/files-and-text' },
-        ],
-      },
-      {
-        text: 'Make it yours',
-        items: [
           { text: 'Tell it what is sensitive', link: '/customize/allow-and-deny' },
-          { text: 'Choose what happens', link: '/customize/actions' },
-          { text: 'Placeholders explained', link: '/customize/placeholders' },
-          { text: 'Add a language', link: '/customize/languages' },
-        ],
-      },
-      {
-        text: 'Good to know',
-        items: [
           { text: 'Safety and limits', link: '/guide/safety' },
           { text: 'Troubleshooting', link: '/guide/troubleshooting' },
           { text: 'FAQ', link: '/guide/faq' },
         ],
       },
       {
-        text: 'Reference',
+        text: 'Advanced: your tools in depth',
+        collapsed: true,
+        items: [
+          { text: 'Claude Code', link: '/use/claude-code' },
+          { text: 'GitHub Copilot', link: '/use/copilot' },
+          { text: 'Other AI apps and SDKs', link: '/use/gateway' },
+        ],
+      },
+      {
+        text: 'Advanced: make it yours',
+        collapsed: true,
+        items: [
+          { text: 'Choose what happens', link: '/customize/actions' },
+          { text: 'Placeholders explained', link: '/customize/placeholders' },
+          { text: 'Add a language', link: '/customize/languages' },
+          { text: 'The policy file and trust', link: '/customize/policy-file' },
+        ],
+      },
+      {
+        text: 'Advanced: reference',
+        collapsed: true,
         items: [
           { text: 'Commands', link: '/reference/commands' },
           { text: 'Settings', link: '/reference/settings' },
           { text: 'What it detects', link: '/reference/detected-types' },
+          { text: 'Data handling', link: '/reference/data-handling' },
+          { text: 'Install, advanced', link: '/reference/install-advanced' },
+          { text: 'Glossary', link: '/reference/glossary' },
         ],
       },
     ],
