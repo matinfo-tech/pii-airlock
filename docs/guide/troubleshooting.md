@@ -90,19 +90,6 @@ it finds. Keep one.
 If the project came from someone else, only settings that tighten protection apply until you run `pii-airlock trust`
 after reviewing the files. `pii-airlock status` lists what is being ignored.
 
-## Developers
-
-### `.venv/bin/pytest: bad interpreter`
-
-Your virtualenv points at an old folder. Recreate it:
-
-```bash
-rm -rf .venv
-python3 -m venv .venv
-.venv/bin/python -m pip install -U pip
-.venv/bin/python -m pip install -e '.[dev]'
-```
-
 ## Still stuck?
 
 [Open a bug report](https://github.com/matinfo-tech/pii-airlock/issues/new/choose) with:

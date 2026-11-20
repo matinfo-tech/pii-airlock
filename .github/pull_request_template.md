@@ -9,7 +9,7 @@
 - [ ] `ruff check .` passes
 - [ ] `pytest -q` passes
 - [ ] Added/updated tests for the change
-- [ ] Updated docs (README / AGENTS.md / CHANGELOG) if user-facing
+- [ ] Updated docs (README / docs site / CHANGELOG) if user-facing
 
 ## Notes
 

@@ -19,7 +19,17 @@ ruff check .        # lint (also: ruff format .)
 pytest -q           # unit + integration tests, fully offline
 ```
 
-Both must pass. CI runs them on Linux (Python 3.10–3.14) and on macOS + Windows.
+Both must pass.
+
+If your virtualenv breaks with `.venv/bin/pytest: bad interpreter` (it points at
+an old folder), recreate it:
+
+```bash
+rm -rf .venv
+python3 -m venv .venv
+.venv/bin/python -m pip install -U pip
+.venv/bin/python -m pip install -e '.[dev]'
+``` CI runs them on Linux (Python 3.10–3.14) and on macOS + Windows.
 
 - Releases: bump the version in `pyproject.toml`, `pii_scrub/__init__.py` **and**
   `plugins/pii-airlock/.claude-plugin/plugin.json` (a test checks all three).
@@ -33,12 +43,13 @@ Both must pass. CI runs them on Linux (Python 3.10–3.14) and on macOS + Window
 
 ## Good first contributions
 
-- **Add a language.** spaCy ships models for many languages — see the README
-  "Adding a language". A docs PR listing a working `{lang: model}` pair is useful.
+- **Add a language.** spaCy ships models for many languages — see
+  [Add a language](https://pii-airlock.matinfo.tech/customize/languages) in the
+  user guide. A docs PR listing a working `{lang: model}` pair is useful.
 - **Add a provider adapter.** Implement a `PayloadAdapter` in
   `pii_scrub/payload.py` (one class: where user text lives in the request, where
   model text lives in the response) and register it. Add tests in
-  `tests/test_payload.py` mirroring the existing ones. See `AGENTS.md`.
+  `tests/test_payload.py` mirroring the existing ones.
 - **Custom recognizers** to improve detection (e.g. locale-specific phone/ID
   formats) via Presidio's recognizer registry.
 

@@ -1,238 +1,54 @@
-# Integrating pii-airlock with AI coding agents
+# AGENTS.md
 
-pii-airlock keeps real PII out of LLM traffic for the agents and clients you
-already use. There are two integration styles:
+Instructions for AI coding agents working **on this repository**. Looking to use pii-airlock with your own agent or
+AI app? See the [user guide](https://pii-airlock.matinfo.tech/use/pick-your-setup).
 
-- **Gateway** — point the client's *base URL* at the local proxy. Transparent,
-  bidirectional (scrubs the request, restores the response). Best for chat-style
-  and OpenAI/Anthropic/Gemini-compatible clients.
-- **Hooks** — Claude Code's native guardrail events. Best for agentic, tool-using
-  sessions where rewriting the payload would interfere with the tool loop.
+## What this project is
 
-Start the gateway once:
+`pii-airlock` is a local privacy layer for AI tools. It replaces personal data with placeholders before a request
+leaves the machine and restores the originals in the reply. Python package `pii_scrub/`, CLI `pii-airlock`.
 
-```bash
-pipx install "pii-airlock[proxy]"
-pii-airlock proxy            # http://127.0.0.1:8745  (127.0.0.1 only by default)
-```
+## Layout
 
-If you're already installed without extras, add gateway deps with:
-
-```bash
-pipx inject pii-airlock 'pii-airlock[proxy]'
-```
-
-Install spaCy models once:
-
-```bash
-pii-airlock download-models
-```
-
-If your pipx environment is pip-less, `download-models` prints exact
-`pipx inject pii-airlock "<model-wheel-url>"` commands for each model.
-
-If you see `No module named spacy`, run `pii-airlock download-models` from the
-same shell/environment where you launch your agent client.
-
----
-
-## Setting an environment variable (all platforms)
-
-Most clients read a base-URL environment variable. Set it in the shell that
-launches the client:
-
-| Shell / OS | Command |
+| Path | Role |
 |---|---|
-| bash / zsh (macOS, Linux) | `export OPENAI_BASE_URL=http://127.0.0.1:8745/openai` |
-| fish | `set -x OPENAI_BASE_URL http://127.0.0.1:8745/openai` |
-| PowerShell (Windows) | `$env:OPENAI_BASE_URL = "http://127.0.0.1:8745/openai"` |
-| cmd.exe (Windows) | `set OPENAI_BASE_URL=http://127.0.0.1:8745/openai` |
+| `pii_scrub/engine.py`, `recognizers.py`, `gliner_backend.py` | Detection (Presidio, spaCy, GLiNER, built-in checksum recognizers) |
+| `pii_scrub/mapping*.py`, `token_key.py`, `surrogates.py` | Placeholders, mapping storage, encryption |
+| `pii_scrub/payload.py`, `proxy.py` | Gateway and provider adapters (OpenAI, Anthropic, Gemini) |
+| `pii_scrub/hooks/`, `hookinstall.py`, `daemon.py` | Claude Code and Copilot hooks, hook daemon |
+| `pii_scrub/project.py`, `policy.py`, `trust.py`, `config*.py` | Project home `.pii-airlock/`, policy, trust, settings |
+| `pii_scrub/cli.py` | CLI entry point |
+| `plugins/pii-airlock/` | Claude Code plugin |
+| `tests/` | Offline tests (Presidio and spaCy are stubbed); `tests/eval/` is the detection quality corpus |
+| `docs/` | VitePress user guide (published at pii-airlock.matinfo.tech) |
 
-Swap the variable/route for the provider (`/anthropic`, `/gemini`) as below.
-
----
-
-## Per-agent setup
-
-### Claude Code  *(recommended: hooks)*
-
-Claude Code is agentic — it moves files and runs commands. Use the **hooks** so
-PII is surfaced without disturbing the tool loop:
+## Commands
 
 ```bash
-cd my-project
-pii-airlock init      # creates .pii-airlock/, installs the user-level hooks once
+pip install -e ".[dev,all]"
+ruff check .                         # lint, must pass
+pytest -q                            # tests, offline, must pass
+python -m tests.eval.run_eval -v     # detection quality (needs the small spaCy models)
+cd docs && npm ci && npm run build   # build the docs site, must pass when docs change
 ```
 
-The hooks are installed for your user but only act in projects that have a
-`.pii-airlock/` folder (`pii-airlock off` pauses one, `pii-airlock status` shows the state).
-At session start Claude is told the project's rules.
+## Rules
 
-| Leak vector | Covered by |
-|---|---|
-| PII you type in a prompt (blocked by default) | `UserPromptSubmit` |
-| PII in a text file Claude reads (content is scanned) | `PreToolUse` |
-| PII in a shell command, edit, search, URL or MCP call | `PreToolUse` |
+- **Privacy first.** Never log, print or commit real personal data, request bodies or mapping contents. Use fake data
+  in tests and examples.
+- **Fail closed.** If detection or a payload cannot be handled, deny or refuse. Do not silently forward.
+- **Add a test** for every behaviour change. Detection changes also need a labeled case in `tests/eval/corpus.jsonl`.
+- **Version bumps** touch `pyproject.toml`, `pii_scrub/__init__.py` and `plugins/pii-airlock/.claude-plugin/plugin.json`
+  together (a test checks all three).
+- **Docs.** User-facing change means updating `docs/` and the `[Unreleased]` section of `CHANGELOG.md`. Keep the
+  README short: it points to the docs site for detail.
+- Match the surrounding style: type hints, `from __future__ import annotations`, small focused modules.
+- Conventional commit subjects (`feat:`, `fix:`, `docs:`), one logical change per commit.
 
-> Hooks stay fast: the first call starts a background daemon that keeps the models
-> loaded (`pii-airlock daemon status`), so later calls take ~60 ms instead of seconds.
+## Adding a provider adapter
 
-> Hooks cannot see tool *output* (e.g. what `cat` prints) or binary files. Detection
-> failures fail closed (treated as PII) unless `hook_on_error: open`.
+Implement a `PayloadAdapter` in `pii_scrub/payload.py`: `scrub_request` (where user text lives in the request) and
+`restore_response` (where model text lives in the response). Register it and mirror the tests in
+`tests/test_payload.py`.
 
-> You *can* also route Claude Code's API traffic through the gateway with
-> `ANTHROPIC_BASE_URL`: tool results are scrubbed and tool-call arguments restored,
-> so it also covers tool output the hooks can't see. Tokens are stable (a keyed hash
-> of the value), so the model sees a value under the same token on every turn.
-
-### Codex CLI / OpenAI SDK / OpenAI-compatible tools
-
-```bash
-export OPENAI_BASE_URL=http://127.0.0.1:8745/openai
-```
-
-Covers Chat Completions *and* the Responses API (used by the Codex CLI), including
-function-call arguments and outputs. Works with the official OpenAI SDKs, the Codex
-CLI, `litellm` (`api_base=...`),
-`vllm`/Ollama front-ends, and most "OpenAI-compatible" tools.
-
-### Anthropic SDK
-
-```bash
-export ANTHROPIC_BASE_URL=http://127.0.0.1:8745/anthropic
-```
-
-### Cursor
-
-Settings → **Models** → enable *Override OpenAI Base URL* and set it to:
-
-```
-http://127.0.0.1:8745/openai
-```
-
-(Use a model served through an OpenAI-compatible endpoint.)
-
-### Continue.dev (VS Code / JetBrains)
-
-In `~/.continue/config.json`, set `apiBase` on the model:
-
-```json
-{
-  "models": [
-    { "title": "via pii-airlock", "provider": "openai",
-      "model": "gpt-4o", "apiBase": "http://127.0.0.1:8745/openai" }
-  ]
-}
-```
-
-### Aider
-
-```bash
-export OPENAI_API_BASE=http://127.0.0.1:8745/openai
-aider
-```
-
-### Google Gemini (google-genai SDK)
-
-```python
-from google import genai
-from google.genai.types import HttpOptions
-
-client = genai.Client(
-    api_key="...",
-    http_options=HttpOptions(base_url="http://127.0.0.1:8745/gemini"),
-)
-```
-
-> Gemini's non-SSE streaming is buffered then restored as one response. Pass
-> `alt=sse` if your client supports it for live streaming.
-
----
-
-### GitHub Copilot
-
-Copilot has three surfaces; only some can be guarded.
-
-| Surface | Covered by | Notes |
-|---|---|---|
-| Copilot Chat / agent mode in VS Code with **your own model** | gateway | Add a *Custom Endpoint* model (below). Needs your own API key. |
-| Copilot CLI and VS Code agent mode: tool calls | hook | `pii-airlock init` (user hook, guarded projects only) |
-| Copilot cloud agent: tool calls | hook | `pii-airlock install-hook --target copilot` (repo file) |
-| Default Copilot models, inline suggestions, prompts in the CLI | **not covered** | GitHub's backend has no base-URL setting; bring-your-own-key does not apply to inline suggestions; Copilot ignores a `userPromptSubmitted` hook's output, so prompts cannot be blocked by a hook. |
-
-**VS Code, custom model through the gateway** (`chatLanguageModels.json`, via *Manage Models*).
-Give the full URL; the gateway forwards your key and scrubs the request:
-
-```json
-[
-  {
-    "name": "OpenAI via pii-airlock",
-    "vendor": "customendpoint",
-    "apiKey": "${input:openaiKey}",
-    "apiType": "chat-completions",
-    "models": [{
-      "id": "gpt-4o", "name": "GPT-4o", "toolCalling": true,
-      "url": "http://127.0.0.1:8745/openai/v1/chat/completions",
-      "maxInputTokens": 100000, "maxOutputTokens": 16000
-    }]
-  },
-  {
-    "name": "Claude via pii-airlock",
-    "vendor": "customendpoint",
-    "apiKey": "${input:anthropicKey}",
-    "apiType": "messages",
-    "models": [{
-      "id": "claude-sonnet-4-6", "name": "Claude Sonnet", "toolCalling": true,
-      "url": "http://127.0.0.1:8745/anthropic/v1/messages",
-      "maxInputTokens": 100000, "maxOutputTokens": 16000
-    }]
-  }
-]
-```
-
-(`apiType: responses` works too, with `http://127.0.0.1:8745/openai/v1/responses`.)
-
-**Copilot CLI / cloud agent / VS Code agent mode, hook.** `pii-airlock init` writes
-`~/.copilot/hooks/pii-airlock.json` (or under `$COPILOT_HOME`) when Copilot is found; the hook then
-acts only in projects with a `.pii-airlock/` folder. For the cloud agent,
-`pii-airlock install-hook --target copilot` writes the repo's `.github/hooks/pii-airlock.json`.
-It registers `preToolUse` with no matcher, so it sees every tool call, and runs the same checks as
-for Claude Code (`hook_decision`, `entity_actions: block`, `hook_on_error`).
-
-- **Payloads.** The hook reads both Copilot shapes: camelCase (`toolName`, `toolArgs` as JSON
-  text) and the snake_case alias (`tool_name`, `tool_input`, possibly still a JSON string).
-- **Tools.** Copilot's tools are `bash`, `powershell`, `view`, `edit`, `create`, `glob`, `grep`,
-  `web_fetch`, `web_search`, `task`, `ask_user`, `update_todo`, `str_replace_editor`,
-  `apply_patch`, `rg`, plus MCP tools. GitHub does not document their argument names, so **every
-  string argument of every one of them is scanned**; `view` also scans the file's content.
-- **Reply.** One JSON object carries both Copilot's top-level `permissionDecision` /
-  `permissionDecisionReason` and Claude Code's nested `hookSpecificOutput`. Each harness reads
-  its own part (Claude Code ignores the extra keys: checked with the `claude` CLI).
-- **Failure modes** (from GitHub's hooks reference). A hook that errors or exits 2 denies the
-  tool call, so detection failures fail closed. A hook **timeout is fail-open**: keep the
-  daemon on (`hook_daemon: auto`, the default) so calls stay far below the 30 s default. The
-  cloud agent treats `ask` as `deny` and honours only the `bash` command.
-- **One install is enough.** Copilot CLI also reads a repository's `.claude/settings.json`: if
-  you registered the Claude Code hook there by hand (`install-hook --scope project`), don't add
-  the Copilot file as well, or every call is scanned twice. `init` writes neither.
-
-> The Claude Code side is tested end to end. The Copilot side follows GitHub's and VS Code's
-> published hook specs but has not been run against a live Copilot session. If a tool call
-> slips through, open an issue with the hook payload.
-
-## Adding a provider
-
-Adding a provider is one small adapter — see
-[`pii_scrub/payload.py`](pii_scrub/payload.py): implement `scrub_request`
-(where user text lives) and `restore_response` (where model text lives), register
-it, add tests. PRs welcome (see [CONTRIBUTING.md](CONTRIBUTING.md)).
-
-## Verify it's working
-
-```bash
-pii-airlock proxy &
-export OPENAI_BASE_URL=http://127.0.0.1:8745/openai
-# Run your client with a fake email/name in the prompt, then check the provider
-# dashboard / logs: you should see a token like <EMAIL_ADDRESS_093117>, not the real value, while
-# your client still shows the real value in the answer.
-```
+See also [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).

@@ -634,7 +634,7 @@ def install_hook(
             init_project(Path.cwd())
         typer.echo(f"{'Installed' if changed else 'Already present:'} Copilot preToolUse hook "
                    f"in {path}. Prompts are not hookable in Copilot: route chat through the "
-                   "gateway (see AGENTS.md).")
+                   "gateway (https://pii-airlock.matinfo.tech/use/copilot).")
         return
     if target != "claude":
         typer.echo("--target must be 'claude' or 'copilot'", err=True)

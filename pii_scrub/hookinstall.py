@@ -85,7 +85,7 @@ def _find_group(groups: list, command: str) -> dict | None:
 # --- GitHub Copilot (CLI and cloud agent) -----------------------------------
 # Copilot hooks live in their own files. Only `preToolUse` can block: a
 # `userPromptSubmitted` hook's output is dropped, so prompts are covered by the
-# gateway (see AGENTS.md), not by a hook.
+# gateway (docs: /use/copilot), not by a hook.
 COPILOT_HOOK = {
     "version": 1,
     "hooks": {
