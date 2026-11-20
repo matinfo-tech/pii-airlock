@@ -44,6 +44,16 @@ The AI answers:       Dear <PERSON_482913>, regarding the invoice…
 You read:             Dear John Smith, regarding the invoice…
 ```
 
+<p align="center">
+  <img src="/demo.gif"
+       alt="Terminal demo: pii-airlock scrubs a name and an email from a prompt, then restores them in the reply"
+       width="760" loading="lazy">
+</p>
+
+## Which tool do you use?
+
+<SetupPicker />
+
 ::: tip New here?
 Read [What is pii-airlock?](/guide/what-is-it), then [pick your setup](/use/pick-your-setup) and follow its
 quick start. You do not need to know Python. You do need to be comfortable pasting a few commands into a terminal.
