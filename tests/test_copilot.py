@@ -61,6 +61,46 @@ def test_copilot_view_scans_the_file_content(monkeypatch, capsys, tmp_path):
     assert "contact jean@acme.fr" in seen
 
 
+# Payloads recorded from a live Copilot CLI 1.0.114 session (2026-11-21), paths shortened.
+# `toolArgs` arrives as an object, with `timestamp` and `toolCallId` alongside.
+_LIVE = {"sessionId": "28c93ba9-c31c-4287-bcba-05c888c9bfa6", "timestamp": 1795217573094,
+         "cwd": "/tmp/repo", "toolCallId": "toolu_01WanfVkmucQqEqmHrE9PSJ6"}
+_LIVE_CALLS = [
+    ("bash", {"command": "echo 'mail jean.dupont@acme-corp.ch'", "description": "Echo mail"},
+     ["echo 'mail jean.dupont@acme-corp.ch'", "Echo mail"]),
+    ("create", {"path": "/tmp/repo/lead.txt", "file_text": "Marie Curchod, +41 79 555 98 76\n"},
+     ["/tmp/repo/lead.txt", "Marie Curchod, +41 79 555 98 76\n"]),
+    ("edit", {"path": "/tmp/repo/notes.txt", "old_str": "hello world",
+              "new_str": "call Marie Curchod"},
+     ["/tmp/repo/notes.txt", "hello world", "call Marie Curchod"]),
+    ("grep", {"pattern": "marie.curchod@acme-corp.ch", "paths": "/tmp/repo"},
+     ["marie.curchod@acme-corp.ch", "/tmp/repo"]),
+    ("glob", {"pattern": "*.txt", "paths": "/tmp/repo"}, ["*.txt", "/tmp/repo"]),
+]
+
+
+@pytest.mark.parametrize("tool,args,expected", _LIVE_CALLS, ids=[c[0] for c in _LIVE_CALLS])
+def test_live_copilot_payloads_are_scanned(monkeypatch, capsys, tool, args, expected):
+    reply, seen = _run(monkeypatch, capsys, {**_LIVE, "toolName": tool, "toolArgs": args})
+    assert sorted(seen) == sorted(expected)
+    assert reply["permissionDecision"] in ("ask", "deny")
+
+
+def test_live_copilot_view_payload_scans_the_file_content(monkeypatch, capsys, tmp_path):
+    f = tmp_path / "customer.txt"
+    f.write_text("Email: jean.dupont@acme-corp.ch")
+    event = {**_LIVE, "cwd": str(tmp_path), "toolName": "view", "toolArgs": {"path": str(f)}}
+    _, seen = _run(monkeypatch, capsys, event)
+    assert "Email: jean.dupont@acme-corp.ch" in seen
+
+
+def test_live_copilot_clean_call_is_allowed_silently(monkeypatch, capsys):
+    event = {**_LIVE, "toolName": "bash",
+             "toolArgs": {"command": "echo hello", "description": "Echo hello"}}
+    reply, _ = _run(monkeypatch, capsys, event, found=())
+    assert reply is None
+
+
 def test_one_reply_serves_claude_code_and_copilot(monkeypatch, capsys):
     event = {"tool_name": "Bash", "tool_input": {"command": "mail jean@acme.fr"}}
     reply, _ = _run(monkeypatch, capsys, event)
