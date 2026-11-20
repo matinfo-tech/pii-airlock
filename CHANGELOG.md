@@ -7,7 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The tool hook no longer stops plain shell commands. Small spaCy models read `npm` as an
+  organisation, `customer.txt` as a place and `git log --oneline` as a person, so
+  `npm test` or `git commit -m "Fix login"` asked for confirmation (and was denied
+  outright under `copilot -p`). In `Bash`, `bash` and `powershell` calls a model
+  detection (person, place, organisation) now counts only when it is written like a
+  name: whole capitalised words, not a path, flag, file name, tool name or the capital
+  opening a sentence. Pattern detections (e-mail, phone, IBAN, card, ids, secrets) and
+  `deny` terms are unaffected. On the new shell corpus, clean commands passing went from
+  12 of 69 to 68 of 69 with the four small models, with no PII missed.
+
 ### Changed
+- The eval harness scores shell commands too (`tests/eval/shell_commands.jsonl`) and
+  gates on them: at least 95% of clean commands pass, every labelled value is caught.
 - The Copilot hook is now validated against a live Copilot CLI session (1.0.114): the
   user-level hook file loads, the reply stops tool calls, and the real `bash`, `view`,
   `create`, `edit`, `grep` and `glob` payloads are scanned. The recorded payloads are
