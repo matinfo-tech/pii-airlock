@@ -134,8 +134,25 @@ def test_doctor_exits_nonzero_when_missing_requirements(monkeypatch):
 
     assert exc.value.exit_code == 1
     rendered = "\n".join(text for text, _ in out)
-    assert "[fail] gateway deps:" in rendered
+    assert "[info] gateway deps:" in rendered and "[info] pip:" in rendered
     assert "[fail] installed models:" in rendered
+
+
+def test_doctor_passes_a_pipx_install_without_the_gateway(monkeypatch):
+    out = _capture_echo(monkeypatch)
+    monkeypatch.setattr(
+        cli, "_build_config", lambda lang, threshold: _fake_config({"en": "en_model"})
+    )
+    monkeypatch.setattr(cli, "_has_pip", lambda: False)
+    monkeypatch.setattr(cli, "_missing_proxy_deps", lambda: ["starlette", "uvicorn"])
+    monkeypatch.setattr(cli, "_model_installed", lambda model: True)
+    monkeypatch.setattr(cli, "_daemon_status", lambda config: "not running")
+
+    cli.doctor()  # no typer.Exit: optional parts missing is not a failure
+
+    rendered = "\n".join(text for text, _ in out)
+    assert "[fail]" not in rendered
+    assert "pipx inject pii-airlock 'pii-airlock[proxy]'" in rendered
 
 
 def _guard(root, text):

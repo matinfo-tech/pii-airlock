@@ -43,6 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/eval/code_snippets.jsonl`.
 
 ### Fixed
+- `doctor` no longer reports a healthy pipx install as broken: a missing `pip` (normal
+  under pipx) and missing gateway packages (needed only for `pii-airlock proxy`) are now
+  `[info]` lines with the install command, and no longer set exit code 1.
 - The tool hook's code filter (0.8.3, shell commands only) now covers all code-like input:
   `Grep` / `grep` / `glob` patterns, file paths, and what is read, written or edited in a
   source file (by extension: `.py`, `.ts`, `.vue`, `.go`, `Dockerfile`...). It also drops

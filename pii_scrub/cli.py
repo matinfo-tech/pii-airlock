@@ -539,37 +539,28 @@ def doctor() -> None:
     m = Mapping()
     mapping_ok = m.restore(m.token_for("PERSON", "A")) == "A"
 
-    checks: list[tuple[str, bool, str]] = [
-        ("Python", True, sys.executable),
-        ("pip available", has_pip, "found" if has_pip else "missing"),
-        (
-            "gateway deps",
-            not missing_deps,
-            "ok" if not missing_deps else f"missing: {', '.join(missing_deps)}",
-        ),
-        (
-            "configured models",
-            bool(models),
-            ", ".join(models) if models else "none",
-        ),
-        (
-            "installed models",
-            not missing_models,
-            "ok" if not missing_models else f"missing: {', '.join(missing_models)}",
-        ),
-        (
-            "mapping roundtrip",
-            mapping_ok,
-            "ok",
-        ),
-        ("hook daemon", True, _daemon_status(config)),
+    # (name, state, detail): "fail" breaks the install and sets the exit code; "info" is
+    # an optional part that is absent (the gateway, pip in a pipx env).
+    checks: list[tuple[str, str, str]] = [
+        ("Python", "ok", sys.executable),
+        ("pip", "ok" if has_pip else "info",
+         "found" if has_pip else
+         "absent (normal for pipx: `download-models` prints `pipx inject` commands)"),
+        ("gateway deps", "ok" if not missing_deps else "info",
+         "ok" if not missing_deps else
+         f"not installed ({', '.join(missing_deps)}), needed only for `pii-airlock proxy`: "
+         "pipx inject pii-airlock 'pii-airlock[proxy]'"),
+        ("configured models", "ok" if models else "fail", ", ".join(models) or "none"),
+        ("installed models", "fail" if missing_models else "ok",
+         f"missing: {', '.join(missing_models)}" if missing_models else "ok"),
+        ("mapping roundtrip", "ok" if mapping_ok else "fail", "ok"),
+        ("hook daemon", "ok", _daemon_status(config)),
     ]
 
     failed = False
-    for name, ok, detail in checks:
-        state = "ok" if ok else "fail"
+    for name, state, detail in checks:
         typer.echo(f"[{state}] {name}: {detail}", err=True)
-        failed = failed or not ok
+        failed = failed or state == "fail"
 
     if failed:
         raise typer.Exit(code=1)
