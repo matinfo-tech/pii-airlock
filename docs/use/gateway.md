@@ -17,7 +17,7 @@ pii-airlock proxy
 Keep that terminal open. It listens at `http://127.0.0.1:8745` and only your own computer can reach it.
 
 Seeing `missing httpx / starlette / uvicorn`? You installed without the gateway part.
-Run `pipx inject pii-airlock 'pii-airlock[proxy]'`.
+Run `pipx reinstall pii-airlock`.
 
 ## 2. Point your tool at it
 

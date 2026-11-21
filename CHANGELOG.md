@@ -11,6 +11,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Spanish IDs in any language: `ES_NIF` (DNI/NIF, `12345678Z`) and `ES_NIE` (`X1234567L`),
   validated by their mod-23 check letter.
 
+### Changed
+- **Upgrades and reinstalls no longer break the install.** `download-models` now stores
+  spaCy models in `~/.local/share/pii-airlock/models` (`$XDG_DATA_HOME`), outside the
+  Python environment, and pii-airlock loads them from there. pipx, uv or Homebrew
+  rebuilding the environment keeps them, and no pip is needed: the `pipx inject <wheel>`
+  step is gone. Models are kept per spaCy version; installed model packages still work.
+- The gateway (httpx, starlette, uvicorn) and Word / PDF reading are now core
+  dependencies: `pipx install pii-airlock` installs everything, and a reinstall can no
+  longer drop them. The `proxy`, `docx`, `pdf` and `all` extras remain, empty, so old
+  install commands keep working.
+- `doctor` loads each model and runs it on a sentence, instead of only checking that it
+  is importable, and notes models that only live inside the app's environment.
+- The `proxy` extra now includes `pdfminer.six` and `python-docx`, so the gateway can
+  read the attachments it checks.
+- URLs, commands and tool or schema definitions in a request are checked like code (the
+  hook's name-shape filter, now `pii_scrub/codenoise.py`), so a URL or "Executes a bash
+  command" is no longer tokenized as a person or place by small models.
+- The eval code gate (`CODE` in `thresholds.json`, was `SHELL`) also scores
+  `tests/eval/code_snippets.jsonl`.
+
+### Fixed
+- spaCy 3.8 cannot load models on Python 3.15 (`OverflowError` in its tokenizer), and
+  pipx picks the newest Python on a reinstall. `doctor` and the detection error now
+  name it and the fix: `pipx reinstall --python python3.14 pii-airlock`.
+- `127.0.0.1`, `0.0.0.0`, `::1`, link-local and multicast addresses, and version numbers
+  (`Version 1.2.3.4`, `v10.0.0.1`) are no longer flagged as `IP_ADDRESS`: they identify
+  no one, and `127.0.0.1` flagged most gateway and server code.
+- `doctor` no longer reports a healthy pipx install as broken: a missing `pip` (normal
+  under pipx) and missing gateway packages (needed only for `pii-airlock proxy`) are now
+  `[info]` lines with the install command, and no longer set exit code 1.
+- The tool hook's code filter (0.8.3, shell commands only) now covers all code-like input:
+  `Grep` / `grep` / `glob` patterns, file paths, and what is read, written or edited in a
+  source file (by extension: `.py`, `.ts`, `.vue`, `.go`, `Dockerfile`...). It also drops
+  CamelCase identifiers (`UserService`), keywords (`None`, `True`) and the capital that
+  opens a line or comment. Data and documents (`.json`, `.csv`, `.yaml`, `.sql`, `.md`,
+  `.txt`) are still scanned as prose. On a new code corpus, clean snippets passing went
+  from 21 of 66 to 62 of 66 with the four small models, with no PII missed. Reading a
+  source file still often asks: product names in comments read as names.
+
 ### Security
 - Images, audio and files inside a gateway request are no longer forwarded blindly. New
   setting `binary_parts` (default `scan`): PDF and Word attachments are text-checked and
@@ -36,31 +75,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the original disguised span is what gets tokenized. On a new corpus
   (`tests/eval/obfuscated.jsonl`), caught went from 19 of 32 to 32 of 32 with no new
   false alarm; the eval gate (`OBFUSCATED`) now requires all of them.
-
-### Changed
-- The `proxy` extra now includes `pdfminer.six` and `python-docx`, so the gateway can
-  read the attachments it checks.
-- URLs, commands and tool or schema definitions in a request are checked like code (the
-  hook's name-shape filter, now `pii_scrub/codenoise.py`), so a URL or "Executes a bash
-  command" is no longer tokenized as a person or place by small models.
-- The eval code gate (`CODE` in `thresholds.json`, was `SHELL`) also scores
-  `tests/eval/code_snippets.jsonl`.
-
-### Fixed
-- `127.0.0.1`, `0.0.0.0`, `::1`, link-local and multicast addresses, and version numbers
-  (`Version 1.2.3.4`, `v10.0.0.1`) are no longer flagged as `IP_ADDRESS`: they identify
-  no one, and `127.0.0.1` flagged most gateway and server code.
-- `doctor` no longer reports a healthy pipx install as broken: a missing `pip` (normal
-  under pipx) and missing gateway packages (needed only for `pii-airlock proxy`) are now
-  `[info]` lines with the install command, and no longer set exit code 1.
-- The tool hook's code filter (0.8.3, shell commands only) now covers all code-like input:
-  `Grep` / `grep` / `glob` patterns, file paths, and what is read, written or edited in a
-  source file (by extension: `.py`, `.ts`, `.vue`, `.go`, `Dockerfile`...). It also drops
-  CamelCase identifiers (`UserService`), keywords (`None`, `True`) and the capital that
-  opens a line or comment. Data and documents (`.json`, `.csv`, `.yaml`, `.sql`, `.md`,
-  `.txt`) are still scanned as prose. On a new code corpus, clean snippets passing went
-  from 21 of 66 to 62 of 66 with the four small models, with no PII missed. Reading a
-  source file still often asks: product names in comments read as names.
 
 ## [0.8.3] - 2026-11-21
 

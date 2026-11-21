@@ -26,12 +26,17 @@ Close and reopen your terminal afterwards so the new command is found.
 ## Install pii-airlock
 
 ```bash
-pipx install "pii-airlock[proxy]"
+pipx install pii-airlock
 pii-airlock init
 ```
 
-`[proxy]` adds the gateway. Without it, only the command-line tools and hooks work.
-Added it later by mistake? `pipx inject pii-airlock 'pii-airlock[proxy]'`.
+This installs everything: the command-line tools, the hooks, the gateway, and Word and PDF support.
+
+::: warning Python 3.15
+spaCy, which pii-airlock uses to spot names, does not run on Python 3.15 yet. If `pii-airlock doctor`
+reports `model load` as failed on Python 3.15, reinstall on 3.14:
+`pipx reinstall --python python3.14 pii-airlock`. Your downloaded models are kept.
+:::
 
 ## Download the language models
 
@@ -42,25 +47,27 @@ pii-airlock needs language models to recognise names. They are not bundled.
 pii-airlock download-models
 ```
 
-Run it once, from the same terminal setup you use for `pii-airlock`. English and French are the defaults.
-To add other languages, see [Add a language](/customize/languages).
+Run it once. English and French are the defaults. To add other languages, see
+[Add a language](/customize/languages).
 
-## Optional extras
+The models are stored in `~/.local/share/pii-airlock/models`, outside pipx's environment, so
+upgrading or reinstalling pii-airlock keeps them. When an upgrade brings a spaCy version that needs
+newer models, `pii-airlock doctor` says so and `download-models` fetches them.
 
-Plain text, CSV and JSON work out of the box. Add more only if you need them:
+## Optional: GLiNER
+
+One model for many languages instead of one spaCy model per language. It is large (it pulls PyTorch):
 
 ```bash
-pipx inject pii-airlock 'pii-airlock[docx]'    # Word .docx files
-pipx inject pii-airlock 'pii-airlock[pdf]'     # PDF files (text extraction only)
-pipx inject pii-airlock 'pii-airlock[all]'    # Word, PDF and gateway
-pipx inject pii-airlock 'pii-airlock[gliner]' # one model for many languages (large)
+pipx inject pii-airlock 'pii-airlock[gliner]'
 ```
 
 ## Update and uninstall
 
 ```bash
-pipx upgrade pii-airlock        # update
+pipx upgrade pii-airlock        # update, then check with: pii-airlock doctor
 pipx uninstall pii-airlock      # remove
+rm -rf ~/.local/share/pii-airlock   # the downloaded models too
 ```
 
 ## Next step

@@ -20,9 +20,15 @@ pipx ensurepath
 
 Close the terminal and open a new one.
 
-### `download-models` says my environment has no pip
+### Names are no longer caught after an upgrade, or every tool call asks
 
-Normal with pipx. The command prints lines like `pipx inject pii-airlock "<model-wheel-url>"`. Run them exactly as shown.
+Run `pii-airlock doctor`. If `model load` fails on Python 3.15, spaCy cannot run there yet:
+
+```bash
+pipx reinstall --python python3.14 pii-airlock
+```
+
+If `installed models` fails, run `pii-airlock download-models`.
 
 ### `No module named spacy`
 
@@ -31,18 +37,12 @@ you use for the rest.
 
 ### `OSError: [E050] Can't find model …` after downloading
 
-The model went into a different environment than the one pii-airlock runs in. Run the exact `pipx inject` command that
-`download-models` prints.
+The model went into a different environment than the one pii-airlock runs in. Run `pii-airlock download-models`: it
+stores models where every pii-airlock install finds them.
 
-### The gateway fails with `httpx`, `starlette` or `uvicorn` missing
+### The gateway fails with `httpx`, `starlette` or `uvicorn` missing, or Word / PDF files are rejected
 
-```bash
-pipx inject pii-airlock 'pii-airlock[proxy]'
-```
-
-### Word or PDF files are rejected
-
-Install the extra: `pipx inject pii-airlock 'pii-airlock[docx]'` or `'pii-airlock[pdf]'`.
+The installation is incomplete (these come with pii-airlock): `pipx reinstall pii-airlock`.
 
 ## Using the gateway
 
