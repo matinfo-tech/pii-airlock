@@ -63,8 +63,8 @@ Your own API key is forwarded to the provider and never logged.
 ## How the hook behaves (details)
 
 - **Same checks as Claude Code.** `hook_decision`, `entity_actions: block` and `hook_on_error` all apply.
-  `bash` and `powershell` calls get the same [shell-command filter](/use/claude-code#shell-commands), so
-  `npm test` is not stopped.
+  Shell commands, `grep` and `glob` patterns, paths and source files get the same
+  [code filter](/use/claude-code#shell-commands-and-code), so `npm test` is not stopped.
   The hook registers `preToolUse` with no matcher, so it sees every tool call.
 - **What it reads.** Copilot's tools are `bash`, `powershell`, `view`, `edit`, `create`, `glob`, `grep`,
   `web_fetch`, `web_search`, `task`, `ask_user`, `update_todo`, `str_replace_editor`, `apply_patch`, `rg`, plus MCP

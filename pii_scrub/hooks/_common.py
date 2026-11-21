@@ -186,9 +186,23 @@ def _analyze(config: Config, event: dict, texts: list[str]) -> list[tuple[str, l
     return [(chunk, engine.detect(chunk)) for chunk in chunks]
 
 
-# Shell tools: a command line is not prose, and NER reads it badly (`npm` as an
-# organisation, `customer.txt` as a place, `git log --oneline` as a person).
-_SHELL_TOOLS = frozenset({"Bash", "bash", "powershell"})
+# Code is not prose, and NER reads it badly: `npm` as an organisation, `customer.txt`
+# as a place, `git log --oneline` or `useState` as a person. In code-like text a model
+# detection must read as a name to count (see _reads_as_a_name).
+# Tools whose every argument is code: shell commands, search patterns, globs.
+_CODE_TOOLS = frozenset({"Bash", "bash", "powershell", "Grep", "grep", "rg", "glob"})
+# Arguments that hold a file path or a search pattern, whatever the tool.
+_PATH_KEYS = frozenset({"file_path", "path", "paths", "notebook_path", "glob", "pattern"})
+# Files whose content is source code. Data and prose (.json, .csv, .yaml, .sql, .md, .txt,
+# .html...) are left out on purpose: fixtures, seeds and documents are where names live.
+_CODE_SUFFIXES = frozenset("""
+    .py .pyi .js .jsx .mjs .cjs .ts .tsx .mts .cts .vue .svelte .astro .go .rs .java .kt .kts
+    .scala .groovy .gradle .rb .php .cs .fs .swift .m .mm .c .h .cc .cpp .cxx .hpp .hh .sh
+    .bash .zsh .fish .ps1 .psm1 .lua .pl .dart .ex .exs .erl .hs .clj .elm .zig .nim .jl
+    .css .scss .sass .less .tf .hcl .toml .ini .cfg .lock
+""".split())
+_CODE_FILE_NAMES = frozenset({"Dockerfile", "Makefile", "Justfile", "Rakefile", "Gemfile",
+                              "Procfile", "Containerfile", "CMakeLists.txt"})
 # Entity types that only the language model finds. Pattern detections (e-mail, IBAN,
 # phone, secrets, national ids...) are precise on command lines too and are never dropped.
 _NER_TYPES = frozenset({"PERSON", "LOCATION", "ORGANIZATION", "NRP"})
@@ -198,41 +212,70 @@ _SPAN_EDGES = " \t\n\"'`()[]{}<>,;:="
 _NAME_PARTICLES = frozenset({"de", "du", "des", "la", "le", "van", "von", "der", "den",
                              "di", "da", "del", "della", "of", "and", "et", "&",
                              "the", "a", "an"})
-# Capitalised words that fill command descriptions and commit messages.
+# Capitalised words that fill command descriptions, commit messages and code.
 _TECH_WORDS = frozenset("""
     api aws azure bash build bun cargo ci cli css docker dockerfile eslint git github gitlab
     go gradle homebrew html http https java javascript jest json kubernetes linux macos make
     makefile markdown maven mysql nginx node npm pnpm postgres prettier pytest python react
     readme redis ruby ruff rust shell sql svelte terraform typescript ubuntu vite vue
     webpack windows yaml yarn zsh
+    none null nil true false self this super props state string number boolean object array
+    error exception class function return import export default const let var async await
+    def lambda type interface enum struct impl fn void int float bool dict list tuple str
+    bytes any path config settings button input form app main index utils service model
+    view component test tests todo fixme
 """.split())
+# A word joined to a capitalised one inside a name ("McDonald", "LeBlanc", "DiCaprio").
+_NAME_PREFIXES = ("Mc", "Mac", "De", "Di", "Da", "Du", "La", "Le", "Van", "Von", "O'", "D'")
+# What may precede the first word of a line or sentence: indentation, comment and list
+# markers, quotes, a full stop.
+_OPENERS = " \t#*-+>/|:;.!?\"'`"
+
+
+def _identifier(word: str) -> bool:
+    """CamelCase like `UserService` or `setCount`, which a name is not ("McDonald" is)."""
+    for prefix in _NAME_PREFIXES:
+        if word.startswith(prefix) and len(word) > len(prefix):
+            word = word[len(prefix):]
+            break
+    return any(a.islower() and b.isupper() for a, b in zip(word, word[1:], strict=False))
+
+
+def _opens_a_sentence(text: str, start: int) -> bool:
+    """Whether `start` is the first word of a line, a sentence or a quoted string."""
+    line = text[:start].rsplit("\n", 1)[-1]
+    if not line.strip(_OPENERS):
+        return True
+    before = line.rstrip()
+    return before[-1] in _QUOTES or (before[-1] in ".!?" and line[-1:].isspace())
 
 
 def _reads_as_a_name(text: str, start: int, end: int) -> bool:
-    """Whether a model detection in a command line looks like a name written by a person:
+    """Whether a model detection in code-like text looks like a name written by a person:
     whole words only (no path, flag, file name or operator), at least one of them
-    capitalised like a name ("Jean", not "npm" or "HEAD"), none a tool name. The capital
-    that opens a sentence ("Push branch", `-m "Fix login"`) does not count, unless the
-    word stands alone (`grep "Dupont"`)."""
+    capitalised like a name ("Jean", not "npm", "HEAD" or "UserService"), none a tool or
+    keyword. The capital that opens a line or sentence ("Push branch", `-m "Fix login"`,
+    `# Fails below`) does not count, unless the word stands alone (`grep "Dupont"`)."""
     span = text[start:end]
     start += len(span) - len(span.lstrip(_SPAN_EDGES))  # NER spans often take a quote along
     words = span.strip(_SPAN_EDGES).split()
     if not words or not all(_NAME_WORD.fullmatch(w) for w in words):
         return False
     core = [w for w in words if w.casefold() not in _NAME_PARTICLES]
-    if not core or any(w.rstrip(".").casefold() in _TECH_WORDS for w in core):
+    if not core or any(w.rstrip(".").casefold() in _TECH_WORDS or _identifier(w)
+                       for w in core):
         return False
-    before = text[:start].rstrip()
-    after = text[start + len(words[0]):].lstrip()
-    opens_a_sentence = (not before or before[-1] in _QUOTES) and after[:1] not in ("", *_QUOTES)
-    named = core[1:] if opens_a_sentence and core[0] is words[0] else core
+    after = text[start + len(words[0]):].lstrip(" \t")
+    alone = after[:1] in ("", "\n", *_QUOTES)
+    opens = _opens_a_sentence(text, start) and not alone
+    named = core[1:] if opens and core[0] is words[0] else core
     return any(w[0].isupper() and not w.isupper() for w in named)
 
 
-def _drop_shell_noise(
+def _drop_code_noise(
     results: list[tuple[str, list[Detection]]],
 ) -> list[tuple[str, list[Detection]]]:
-    """Model detections in a shell command that do not read as a name are dropped.
+    """Model detections in code-like text that do not read as a name are dropped.
 
     A certain detection (score 1.0: a `deny` term or custom pattern labelled PERSON...)
     is the user's own rule and always stays."""
@@ -295,6 +338,35 @@ def _tool_texts(tool: str, tool_input: dict, event: dict, config: Config) -> lis
     return texts
 
 
+def _is_code_file(path) -> bool:
+    if not isinstance(path, str) or not path:
+        return False
+    p = Path(path)
+    return p.name in _CODE_FILE_NAMES or p.suffix.lower() in _CODE_SUFFIXES
+
+
+def _code_texts(tool: str, tool_input: dict, texts: list[str]) -> list[bool]:
+    """For each of `texts`, whether it is code (filtered) rather than prose (not)."""
+    if tool in _CODE_TOOLS:
+        return [True] * len(texts)
+    if tool in ("NotebookEdit",) or _is_code_file(tool_input.get("file_path")
+                                                   or tool_input.get("path")):
+        return [True] * len(texts)  # content, old and new strings of a source file
+    paths = {s for key in _PATH_KEYS for s in _collect_strings(tool_input.get(key))}
+    return [text in paths for text in texts]
+
+
+def _scan(config: Config, event: dict, texts: list[str], code: list[bool]):
+    """_analyze, then the code-noise filter on the chunks that come from code."""
+    results = _analyze(config, event, texts)
+    flags = [c for text, c in zip(texts, code, strict=True)
+             if text and text.strip() for _ in _chunks(text)]
+    if not any(flags):
+        return results
+    return [_drop_code_noise([r])[0] if c else r
+            for r, c in zip(results, flags, strict=True)]
+
+
 def run_pre_tool_use() -> None:
     event = _read_event()
     config, config_error = _load_config(event)
@@ -311,10 +383,8 @@ def run_pre_tool_use() -> None:
                 raise config_error
             if texts is None:
                 return  # tool not covered; no decision -> allow
-            results = _analyze(config, event, texts)
-            if tool in _SHELL_TOOLS:
-                results = _drop_shell_noise(results)
-            found = _types(results)
+            found = _types(_scan(config, event, texts,
+                                 _code_texts(tool, tool_input, texts)))
     except _FAILURES as exc:
         if config.hook_on_error == "open":
             return

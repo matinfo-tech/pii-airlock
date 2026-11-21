@@ -1,0 +1,74 @@
+{"id": "clean-01", "text": "TODO", "pii": []}
+{"id": "clean-02", "text": "def run_pre_tool_use", "pii": []}
+{"id": "clean-03", "text": "import React", "pii": []}
+{"id": "clean-04", "text": "class .*Engine", "pii": []}
+{"id": "clean-05", "text": "useState\\(", "pii": []}
+{"id": "clean-06", "text": "console\\.log", "pii": []}
+{"id": "clean-07", "text": "function handleSubmit", "pii": []}
+{"id": "clean-08", "text": "permissionDecision", "pii": []}
+{"id": "clean-09", "text": "export default", "pii": []}
+{"id": "clean-10", "text": "FIXME|HACK", "pii": []}
+{"id": "clean-11", "text": "async def .*\\(self", "pii": []}
+{"id": "clean-12", "text": "@app.command", "pii": []}
+{"id": "clean-13", "text": "from pii_scrub", "pii": []}
+{"id": "clean-14", "text": "README", "pii": []}
+{"id": "clean-15", "text": "getUserById", "pii": []}
+{"id": "clean-16", "text": "Config\\(", "pii": []}
+{"id": "clean-17", "text": "\\bfoo\\b", "pii": []}
+{"id": "clean-18", "text": "raise ValueError", "pii": []}
+{"id": "clean-19", "text": "interface Props", "pii": []}
+{"id": "clean-20", "text": "SELECT .* FROM users", "pii": []}
+{"id": "clean-21", "text": "*.txt", "pii": []}
+{"id": "clean-22", "text": "**/*.py", "pii": []}
+{"id": "clean-23", "text": "src/**/*.tsx", "pii": []}
+{"id": "clean-24", "text": "tests/test_*.py", "pii": []}
+{"id": "clean-25", "text": "docs/**/*.md", "pii": []}
+{"id": "clean-26", "text": "*.{js,ts}", "pii": []}
+{"id": "clean-27", "text": "package.json", "pii": []}
+{"id": "clean-28", "text": "**/Dockerfile", "pii": []}
+{"id": "clean-29", "text": ".github/workflows/*.yml", "pii": []}
+{"id": "clean-30", "text": "src/components/*.vue", "pii": []}
+{"id": "clean-31", "text": "/Users/dev/project/src/components/Header.vue", "pii": []}
+{"id": "clean-32", "text": "/home/runner/work/app/app/tests/test_api.py", "pii": []}
+{"id": "clean-33", "text": "src/App.tsx", "pii": []}
+{"id": "clean-34", "text": "README.md", "pii": []}
+{"id": "clean-35", "text": "/private/tmp/repo/notes.txt", "pii": []}
+{"id": "clean-36", "text": "docs/.vitepress/config.mts", "pii": []}
+{"id": "clean-37", "text": "pii_scrub/hooks/_common.py", "pii": []}
+{"id": "clean-38", "text": "/Users/dev/Workspace/git/shop/backend/models/order.py", "pii": []}
+{"id": "clean-39", "text": "package.json", "pii": []}
+{"id": "clean-40", "text": "C:\\Users\\dev\\source\\repos\\Shop\\Program.cs", "pii": []}
+{"id": "clean-41", "text": "hello world", "pii": []}
+{"id": "clean-42", "text": "return None", "pii": []}
+{"id": "clean-43", "text": "const [count, setCount] = useState(0)", "pii": []}
+{"id": "clean-44", "text": "    if not text.strip():\n        return []", "pii": []}
+{"id": "clean-45", "text": "import { defineConfig } from 'vitepress'", "pii": []}
+{"id": "clean-46", "text": "timeoutSec: 30", "pii": []}
+{"id": "clean-47", "text": "<Button variant=\"primary\" onClick={handleSave}>Save</Button>", "pii": []}
+{"id": "clean-48", "text": "raise RuntimeError(\"spaCy model(s) not installed\")", "pii": []}
+{"id": "clean-49", "text": "\"version\": \"0.8.3\",", "pii": []}
+{"id": "clean-50", "text": "def test_install_copilot_is_idempotent(tmp_path, monkeypatch):", "pii": []}
+{"id": "clean-51", "text": "// TODO: handle pagination", "pii": []}
+{"id": "clean-52", "text": "export const API_URL = process.env.API_URL ?? 'http://localhost:3000'", "pii": []}
+{"id": "clean-53", "text": "SELECT id, created_at FROM orders WHERE status = 'paid'", "pii": []}
+{"id": "clean-54", "text": "margin: 0 auto;", "pii": []}
+{"id": "clean-55", "text": "logger.info(\"Server started on port %d\", port)", "pii": []}
+{"id": "clean-56", "text": "class UserService:", "pii": []}
+{"id": "clean-57", "text": "useEffect(() => { fetchData() }, [])", "pii": []}
+{"id": "clean-58", "text": "fn main() { println!(\"Hello, world!\"); }", "pii": []}
+{"id": "clean-59", "text": "    # Retry once: the daemon may still be loading the models.\n    return detect(cwd, texts)", "pii": []}
+{"id": "clean-60", "text": "def format_report(report: Report, verbose: bool = False) -> str:", "pii": []}
+{"id": "clean-61", "text": "@pytest.mark.parametrize(\"scope\", [\"project\", \"user\"])", "pii": []}
+{"id": "clean-62", "text": "export function useAuth() {\n  const { data: session } = useSession()\n  return session?.user\n}", "pii": []}
+{"id": "clean-63", "text": "/** Renders the Header with the current Theme. */\nexport default defineComponent({ name: 'AppHeader' })", "pii": []}
+{"id": "clean-64", "text": "impl Display for ParseError {\n    fn fmt(&self, f: &mut Formatter) -> Result { write!(f, \"bad input\") }\n}", "pii": []}
+{"id": "clean-65", "text": "    // Fails closed: a timeout here means the Engine never answered.", "pii": []}
+{"id": "clean-66", "text": "FROM python:3.12-slim\nWORKDIR /app\nCOPY . .\nRUN pip install -e .", "pii": []}
+{"id": "pii-01", "text": "USERS = [{\"name\": \"Sarah Johnson\", \"email\": \"sarah.johnson@acme-corp.ch\"}]", "pii": [["PERSON", "Sarah Johnson"], ["EMAIL_ADDRESS", "sarah.johnson@acme-corp.ch"]]}
+{"id": "pii-02", "text": "# Reported by Michael Brown, see ticket 4412", "pii": [["PERSON", "Michael Brown"]]}
+{"id": "pii-03", "text": "assert customer.name == \"Emily Clark\"", "pii": [["PERSON", "Emily Clark"]]}
+{"id": "pii-04", "text": "const owner = 'Jean-Pierre Dubois'", "pii": [["PERSON", "Jean-Pierre Dubois"]]}
+{"id": "pii-05", "text": "IBAN = \"CH93 0076 2011 6238 5295 7\"", "pii": [["IBAN_CODE", "CH93 0076 2011 6238 5295 7"]]}
+{"id": "pii-06", "text": "phone: str = \"+41 79 555 12 34\"", "pii": [["PHONE_NUMBER", "+41 79 555 12 34"]]}
+{"id": "pii-07", "text": "Michael Brown", "pii": [["PERSON", "Michael Brown"]]}
+{"id": "pii-08", "text": "def test_invoice_for_david_miller():\n    invoice = make_invoice(client=\"David Miller\", city=\"Lausanne\")", "pii": [["PERSON", "David Miller"]]}

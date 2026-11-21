@@ -8,22 +8,23 @@ import json
 import pytest
 
 from tests.eval.run_eval import (
-    SHELL_CORPUS,
+    CODE_CORPORA,
     SMALL_MODELS,
     THRESHOLDS,
     available_models,
+    check_code_gate,
     check_gate,
-    check_shell_gate,
     evaluate,
-    evaluate_shell,
+    evaluate_code,
+    format_code_report,
     format_report,
-    format_shell_report,
     gold_spans,
+    load_code_corpora,
     load_corpus,
 )
 
 
-@pytest.mark.parametrize("path", [None, SHELL_CORPUS], ids=["corpus", "shell"])
+@pytest.mark.parametrize("path", [None, *CODE_CORPORA], ids=["corpus", "shell", "code"])
 def test_corpus_labels_are_present_in_text(path):
     for case in load_corpus(*([path] if path else [])):
         found = {(e, case["text"][s:t]) for e, s, t in gold_spans(case)}
@@ -41,12 +42,12 @@ def test_detection_quality_gate():
 
 
 @pytest.mark.eval
-def test_shell_command_gate():
+def test_code_input_gate():
     if set(available_models(SMALL_MODELS)) != set(SMALL_MODELS):
         pytest.skip("run `python -m spacy download en_core_web_sm fr_core_news_sm`")
-    report = evaluate_shell(load_corpus(SHELL_CORPUS), SMALL_MODELS)
-    failures = check_shell_gate(report, json.loads(THRESHOLDS.read_text("utf-8")))
-    assert not failures, format_shell_report(report, verbose=True)
+    report = evaluate_code(load_code_corpora(), SMALL_MODELS)
+    failures = check_code_gate(report, json.loads(THRESHOLDS.read_text("utf-8")))
+    assert not failures, format_code_report(report, verbose=True)
 
 
 @pytest.mark.eval
