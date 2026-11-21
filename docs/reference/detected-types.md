@@ -12,7 +12,7 @@ checked recognizers. Use these type names with [`pii-airlock action`](/customize
 | `PHONE_NUMBER` | `+33 6 12 34 56 78`, `079 123 45 67` |
 | `CREDIT_CARD` | Card numbers |
 | `IBAN_CODE` | Bank account numbers |
-| `IP_ADDRESS` | `192.168.1.10` |
+| `IP_ADDRESS` | `192.168.1.10` (not `127.0.0.1`, `0.0.0.0`, link-local or a version number such as `v1.2.3.4`) |
 | `LOCATION` | Cities, addresses |
 | `SECRET` | API keys, tokens, private keys, `password=…` values |
 
@@ -28,6 +28,7 @@ These check the number's built-in check digit, so a random number does not trigg
 | `DE_TAX_ID` | German tax ID (needs a nearby keyword such as `Steuer-ID` or `IdNr`) | ISO 7064 MOD 11,10 |
 | `DE_TAX_NUMBER` | German `Steuernummer`, for example `21/815/08150` (needs a keyword) | format |
 | `IT_VAT_CODE` | Italian Partita IVA (with the `IT` prefix or a `P.IVA` keyword) | Luhn |
+| `ES_NIF`, `ES_NIE` | Spanish DNI/NIF `12345678Z` and foreigner NIE `X1234567L` (with or without `.`/`-`) | mod-23 check letter |
 | `PHONE_NUMBER` | International `+CC …` in any language, plus FR, CH, DE and IT national formats such as `06 12 34 56 78`, `079 123 45 67`, `030 12345678`, `333 1234567` | format |
 | `SECRET` | Keys for AWS, GitHub, Slack, OpenAI, Anthropic, Google and Stripe, JWTs, private keys, passwords in URLs, `password=…` values | format |
 

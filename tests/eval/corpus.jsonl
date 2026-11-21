@@ -67,3 +67,5 @@
 {"id":"it-vat","lang":"it","text":"La fattura è intestata alla ditta con Partita IVA IT12345678903.","pii":[["IT_VAT_CODE","IT12345678903"]]}
 {"id":"it-phone-national","lang":"it","text":"Ci trovi al 06 12345678 oppure sul cellulare 333 1234567 in giornata.","pii":[["PHONE_NUMBER","06 12345678"],["PHONE_NUMBER","333 1234567"]]}
 {"id":"it-numbers-clean","lang":"it","text":"Il 12/03/2024 alle 10:30 la consegna costa 1234,56 euro, ordine 2024 123456, CAP 00184.","pii":[]}
+{"id": "es-dni-email", "lang": "es", "text": "El cliente Javier Morales, DNI 12345678Z, escribió desde javier.morales@ejemplo.es ayer.", "pii": [["PERSON", "Javier Morales"], ["ES_NIF", "12345678Z"], ["EMAIL_ADDRESS", "javier.morales@ejemplo.es"]]}
+{"id": "es-nie-phone", "lang": "es", "text": "Residente con NIE X1234567L, teléfono +34 612 345 678, solicita el reembolso.", "pii": [["ES_NIE", "X1234567L"], ["PHONE_NUMBER", "+34 612 345 678"]]}
