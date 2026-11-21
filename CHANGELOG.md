@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-11-21
+
+Released to restore a GitHub Release page (0.9.0's was removed; 0.9.0 stays on PyPI).
+Detection is unchanged since 0.9.0: see [0.9.0] for what is new and how to upgrade.
+
 ### Changed
 - The Homebrew tap moved: `brew install matinfo-tech/tap/pii-airlock` (the old
   `matinfo/tap` name keeps working through GitHub's redirect).
+- The publish job skips files PyPI already has, so re-creating a Release no longer
+  fails.
 
 ## [0.9.0] - 2026-11-21
 
@@ -408,7 +415,8 @@ then, your installed models stand in. On Python 3.15, reinstall on 3.14 first:
   `install-hook`.
 - Config override chain: bundled defaults → user → project → CLI flags.
 
-[Unreleased]: https://github.com/matinfo-tech/pii-airlock/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/matinfo-tech/pii-airlock/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/matinfo-tech/pii-airlock/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/matinfo-tech/pii-airlock/compare/v0.8.3...v0.9.0
 [0.8.3]: https://github.com/matinfo-tech/pii-airlock/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/matinfo-tech/pii-airlock/compare/v0.8.0...v0.8.2
