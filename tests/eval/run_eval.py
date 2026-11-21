@@ -5,6 +5,7 @@
     python -m tests.eval.run_eval -v              # also list misses and false positives
     python -m tests.eval.run_eval --models en=en_core_web_lg,fr=fr_core_news_lg
     python -m tests.eval.run_eval --backend gliner   # needs pii-airlock[gliner]
+    python -m tests.eval.run_eval --threshold 0.4 --timing
 
 The corpus (corpus.jsonl) holds only fake data. Each case lists the PII values
 that appear in its text; every occurrence of a value is a gold span.
@@ -31,11 +32,12 @@ import argparse
 import json
 import re
 import sys
+import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from importlib.util import find_spec
 from pathlib import Path
 
+from pii_scrub import models as model_store
 from pii_scrub.config import Config
 from pii_scrub.engine import ScrubEngine
 
@@ -78,6 +80,16 @@ class Report:
     total: Stats = field(default_factory=Stats)
     misses: list[str] = field(default_factory=list)
     false_positives: list[str] = field(default_factory=list)
+    words: int = 0       # words that are not PII
+    hidden: int = 0      # of those, covered by a detection (tokenized for nothing)
+
+    @property
+    def words_kept(self) -> float:
+        """Share of the words that are not PII left readable: what over-detection costs."""
+        return 1 - self.hidden / self.words if self.words else 1.0
+
+
+_WORDS = re.compile(r"\w+")
 
 
 def load_corpus(path: Path = CORPUS) -> list[dict]:
@@ -102,13 +114,28 @@ def _overlap(a: tuple[int, int], b: tuple[int, int]) -> bool:
 
 
 def available_models(models: dict[str, str]) -> dict[str, str]:
-    return {lang: m for lang, m in models.items() if find_spec(m) is not None}
+    """Models that load: installed packages, or copies in the model store."""
+    return {lang: m for lang, m in models.items() if model_store.locate(m) is not None}
+
+
+_ENGINES: dict[tuple, ScrubEngine] = {}
+#: Config overrides for every engine the harness builds (--threshold).
+SETTINGS: dict = {}
+
+
+def _engine(models: dict[str, str], backend: str) -> ScrubEngine:
+    """One engine per model set, so the models load once for all three corpora."""
+    key = (tuple(sorted(models.items())), backend, tuple(sorted(SETTINGS.items())))
+    if key not in _ENGINES:
+        _ENGINES[key] = ScrubEngine(Config(languages=list(models), models=models,
+                                           ner_backend=backend, **SETTINGS))
+    return _ENGINES[key]
 
 
 def evaluate(cases: list[dict], models: dict[str, str], backend: str = "spacy") -> Report:
     if backend == "spacy":
         models = available_models(models)
-    engine = ScrubEngine(Config(languages=list(models), models=models, ner_backend=backend))
+    engine = _engine(models, backend)
     report = Report()
     for case in cases:
         text = case["text"]
@@ -125,6 +152,13 @@ def evaluate(cases: list[dict], models: dict[str, str], backend: str = "spacy") 
             if not hit:
                 kind = "LEAK" if not covered else "mistyped"
                 report.misses.append(f"[{case['id']}] {kind} {entity}: {text[start:end]!r}")
+        gold_chars = {i for _, s, e in gold for i in range(s, e)}
+        det_chars = {i for _, s, e in dets for i in range(s, e)}
+        for m in _WORDS.finditer(text):
+            chars = set(range(m.start(), m.end()))
+            if not chars & gold_chars:
+                report.words += 1
+                report.hidden += bool(chars & det_chars)
         for entity, start, end in dets:
             ok = any(t == entity and _overlap((start, end), (s, e)) for t, s, e in gold)
             for st in (report.per_entity[entity], report.total):
@@ -163,7 +197,7 @@ def evaluate_code(cases: list[dict], models: dict[str, str],
 
     if backend == "spacy":
         models = available_models(models)
-    engine = ScrubEngine(Config(languages=list(models), models=models, ner_backend=backend))
+    engine = _engine(models, backend)
     report = CodeReport()
     for case in cases:
         text = case["text"]
@@ -211,7 +245,7 @@ def evaluate_obfuscated(cases: list[dict], models: dict[str, str],
                         backend: str = "spacy") -> ObfuscatedReport:
     if backend == "spacy":
         models = available_models(models)
-    engine = ScrubEngine(Config(languages=list(models), models=models, ner_backend=backend))
+    engine = _engine(models, backend)
     report = ObfuscatedReport()
     for case in cases:
         text, dets = case["text"], engine.detect(case["text"])
@@ -282,6 +316,8 @@ def format_report(report: Report, verbose: bool = False) -> str:
         )
     t = report.total
     rows.append(f"{'ALL':<16}{t.gold:>5}{t.recall:>9.2f}{t.leak_free:>11.2f}{t.precision:>11.2f}")
+    rows.append(f"words kept: {report.words_kept:.2f} ({report.hidden} of {report.words} "
+                "words that are not PII were hidden)")
     if verbose:
         rows += ["", "Misses:", *report.misses, "", "Extra detections:", *report.false_positives]
     return "\n".join(rows)
@@ -295,7 +331,7 @@ def check_gate(report: Report, thresholds: dict) -> list[str]:
             continue  # see check_code_gate
         st = report.total if entity == "ALL" else report.per_entity.get(entity, Stats())
         for metric, floor in floors.items():
-            value = getattr(st, metric)
+            value = report.words_kept if metric == "words_kept" else getattr(st, metric)
             if value + 1e-9 < floor:
                 failures.append(f"{entity} {metric} {value:.2f} < {floor:.2f}")
     return failures
@@ -308,7 +344,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("-v", "--verbose", action="store_true", help="list misses and extras")
     ap.add_argument("--models", help="lang=model pairs, e.g. en=en_core_web_lg,fr=fr_core_news_lg")
     ap.add_argument("--backend", choices=["spacy", "gliner"], default="spacy")
+    ap.add_argument("--threshold", type=float, help="score_threshold (default: the config's)")
+    ap.add_argument("--timing", action="store_true", help="print model load and scan times")
     args = ap.parse_args(argv)
+    if args.threshold is not None:
+        SETTINGS["score_threshold"] = args.threshold
 
     models = dict(SMALL_MODELS)
     if args.models:
@@ -317,12 +357,28 @@ def main(argv: list[str] | None = None) -> int:
     if missing and args.backend == "spacy":
         print(f"warning: models not installed for {missing}; those cases are scored anyway",
               file=sys.stderr)
-    report = evaluate(load_corpus(), models, args.backend)
+    clock = time.perf_counter()
+    if args.backend == "spacy":
+        _engine(available_models(models), args.backend).load()
+    else:
+        _engine(models, args.backend).load()
+    timings = [("model load", time.perf_counter() - clock)]
+
+    def timed(label, run, *a):
+        start = time.perf_counter()
+        result = run(*a)
+        timings.append((label, time.perf_counter() - start))
+        return result
+
+    report = timed("corpus", evaluate, load_corpus(), models, args.backend)
     print(format_report(report, args.verbose))
-    code = evaluate_code(load_code_corpora(), models, args.backend)
+    code = timed("code", evaluate_code, load_code_corpora(), models, args.backend)
     print("\n" + format_code_report(code, args.verbose))
-    disguised = evaluate_obfuscated(load_corpus(OBFUSCATED_CORPUS), models, args.backend)
+    disguised = timed("disguised", evaluate_obfuscated, load_corpus(OBFUSCATED_CORPUS),
+                      models, args.backend)
     print(format_obfuscated_report(disguised, args.verbose))
+    if args.timing:
+        print("\ntiming: " + ", ".join(f"{label} {sec:.1f}s" for label, sec in timings))
     if args.gate:
         path = THRESHOLDS_BY_BACKEND.get(args.backend, THRESHOLDS)
         thresholds = json.loads(path.read_text("utf-8"))

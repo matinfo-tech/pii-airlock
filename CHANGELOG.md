@@ -23,8 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   install commands keep working.
 - `doctor` loads each model and runs it on a sentence, instead of only checking that it
   is importable, and notes models that only live inside the app's environment.
-- The `proxy` extra now includes `pdfminer.six` and `python-docx`, so the gateway can
-  read the attachments it checks.
 - URLs, commands and tool or schema definitions in a request are checked like code (the
   hook's name-shape filter, now `pii_scrub/codenoise.py`), so a URL or "Executes a bash
   command" is no longer tokenized as a person or place by small models.
@@ -32,6 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/eval/code_snippets.jsonl`.
 
 ### Fixed
+- Far fewer words hidden for nothing when several languages are configured. Every
+  model reads every text (mixed English/French stays covered), but a model reading
+  another language's text tags ordinary phrases: the English model called "Merci
+  d'envoyer le contrat à" an organization. Where the words around a finding are in
+  another language, only its name-shaped parts are kept now. On the eval corpus, the
+  share of non-PII words left readable goes from 0.60 to 0.84, with the same misses;
+  the eval reports it (`words kept`) and gates it.
 - spaCy 3.8 cannot load models on Python 3.15 (`OverflowError` in its tokenizer), and
   pipx picks the newest Python on a reinstall. `doctor` and the detection error now
   name it and the fix: `pipx reinstall --python python3.14 pii-airlock`.

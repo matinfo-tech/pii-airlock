@@ -37,7 +37,8 @@ Specific gaps:
 - **Other gateway endpoints** that carry a body are refused unless you list them in `passthrough_paths`.
 - **Gemini array streaming** (without `alt=sse`) is buffered, then restored as one response.
 - **Every configured language** is analysed for every text and the results merged, so mixed English/French text is
-  covered, at the cost of one pass per language.
+  covered, at the cost of one pass per language. From a model reading another language than its own, only spans that
+  look like names (capitalized words) are kept, so a name in lowercase that only that model found is missed.
 
 ## The map file holds the real data
 

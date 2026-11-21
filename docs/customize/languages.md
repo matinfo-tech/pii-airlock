@@ -1,7 +1,8 @@
 # Add a language
 
 By default pii-airlock looks for names in **English and French**. It checks every configured language on every
-text and combines the results, so mixed text is handled.
+text and combines the results, so mixed text is handled. Where a model reads text in another language, only what
+looks like a name is kept from it: the English model would otherwise tag ordinary French phrases as organizations.
 
 ## Add German as an example
 

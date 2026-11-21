@@ -69,3 +69,30 @@
 {"id":"it-numbers-clean","lang":"it","text":"Il 12/03/2024 alle 10:30 la consegna costa 1234,56 euro, ordine 2024 123456, CAP 00184.","pii":[]}
 {"id": "es-dni-email", "lang": "es", "text": "El cliente Javier Morales, DNI 12345678Z, escribió desde javier.morales@ejemplo.es ayer.", "pii": [["PERSON", "Javier Morales"], ["ES_NIF", "12345678Z"], ["EMAIL_ADDRESS", "javier.morales@ejemplo.es"]]}
 {"id": "es-nie-phone", "lang": "es", "text": "Residente con NIE X1234567L, teléfono +34 612 345 678, solicita el reembolso.", "pii": [["ES_NIE", "X1234567L"], ["PHONE_NUMBER", "+34 612 345 678"]]}
+{"id": "names-fr-1", "lang": "fr", "text": "Bonjour, je transmets le dossier à Nathalie Rochat demain matin.", "pii": [["PERSON", "Nathalie Rochat"]]}
+{"id": "names-fr-2", "lang": "fr", "text": "Pouvez-vous rappeler Olivier Mercier au sujet de la facture ?", "pii": [["PERSON", "Olivier Mercier"]]}
+{"id": "names-fr-3", "lang": "fr", "text": "Le rendez-vous avec Dr. Hélène Fournier est confirmé pour lundi.", "pii": [["PERSON", "Hélène Fournier"]]}
+{"id": "names-fr-4", "lang": "fr", "text": "Envoie le rapport à Kevin Huber et mets Anna Keller en copie.", "pii": [["PERSON", "Kevin Huber"], ["PERSON", "Anna Keller"]]}
+{"id": "names-fr-5", "lang": "fr", "text": "Merci à Thomas Lefèvre pour son aide sur le projet.", "pii": [["PERSON", "Thomas Lefèvre"]]}
+{"id": "names-de-6", "lang": "de", "text": "Ich habe gestern mit Stefan Wagner über das Budget gesprochen.", "pii": [["PERSON", "Stefan Wagner"]]}
+{"id": "names-de-7", "lang": "de", "text": "Bitte leiten Sie die Unterlagen an Petra Schulz weiter.", "pii": [["PERSON", "Petra Schulz"]]}
+{"id": "names-de-8", "lang": "de", "text": "Der Vertrag wurde von Michael Hoffmann unterschrieben.", "pii": [["PERSON", "Michael Hoffmann"]]}
+{"id": "names-it-9", "lang": "it", "text": "Ho inviato il preventivo a Alessandro Moretti ieri sera.", "pii": [["PERSON", "Alessandro Moretti"]]}
+{"id": "names-it-10", "lang": "it", "text": "Puoi chiamare Chiara Esposito per confermare l'ordine?", "pii": [["PERSON", "Chiara Esposito"]]}
+{"id": "names-en-11", "lang": "en", "text": "Please forward the invoice to Daniel Brooks before Monday.", "pii": [["PERSON", "Daniel Brooks"]]}
+{"id": "names-en-12", "lang": "en", "text": "I met with Priya Raman and Tom Becker to review the draft.", "pii": [["PERSON", "Priya Raman"], ["PERSON", "Tom Becker"]]}
+{"id": "names-en-13", "lang": "en", "text": "Can you ask Mark Will about the server migration?", "pii": [["PERSON", "Mark Will"]]}
+{"id": "names-fr-14", "lang": "fr", "text": "Salut, c'est Jean-Marc Dubois, je serai en retard.", "pii": [["PERSON", "Jean-Marc Dubois"]]}
+{"id": "names-fr-15", "lang": "fr", "text": "Réunion avec Ludwig van Dijk et Maria del Carmen Ruiz à Genève.", "pii": [["PERSON", "Ludwig van Dijk"], ["PERSON", "Maria del Carmen Ruiz"], ["LOCATION", "Genève"]]}
+{"id": "names-en-16", "lang": "en", "text": "Hi team, Sabine Roth will join the call, merci de l'ajouter.", "pii": [["PERSON", "Sabine Roth"]]}
+{"id": "names-fr-17", "lang": "fr", "text": "Signé: Pierre-Alain Favre, directeur", "pii": [["PERSON", "Pierre-Alain Favre"]]}
+{"id": "names-fr-18", "lang": "fr", "text": "La demande vient de Mme Yasmine Benali, cliente depuis 2019.", "pii": [["PERSON", "Yasmine Benali"]]}
+{"id": "names-de-19", "lang": "de", "text": "Rufen Sie bitte Frau Ayşe Yılmaz zurück.", "pii": [["PERSON", "Ayşe Yılmaz"]]}
+{"id": "names-it-20", "lang": "it", "text": "Il cliente Giorgio De Luca ha chiesto un rimborso.", "pii": [["PERSON", "Giorgio De Luca"]]}
+{"id": "names-fr-21", "lang": "fr", "text": "j'ai parlé avec jean dupont hier soir", "pii": [["PERSON", "jean dupont"]]}
+{"id": "names-fr-22", "lang": "fr", "text": "Contacte Marc Antoine à propos du devis.", "pii": [["PERSON", "Marc Antoine"]]}
+{"id": "names-fr-23", "lang": "fr", "text": "Claire a confirmé le rendez-vous de jeudi.", "pii": [["PERSON", "Claire"]]}
+{"id": "names-fr-24", "lang": "fr", "text": "Sophie m'a envoyé le fichier hier.", "pii": [["PERSON", "Sophie"]]}
+{"id": "names-de-25", "lang": "de", "text": "Natascha hat gestern angerufen und um Rückruf gebeten.", "pii": [["PERSON", "Natascha"]]}
+{"id": "names-it-26", "lang": "it", "text": "Francesca ha già firmato il contratto.", "pii": [["PERSON", "Francesca"]]}
+{"id": "names-fr-27", "lang": "fr", "text": "Je dois voir Laurent avant la réunion.", "pii": [["PERSON", "Laurent"]]}
