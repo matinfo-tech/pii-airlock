@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from functools import cached_property, lru_cache
 from typing import TypeVar
 
+from . import langguess
 from . import models as model_store
 from .config import Config, load_config
 from .mapping import Mapping
@@ -54,6 +55,10 @@ _LONG_IDS = frozenset({
     "DE_TAX_ID", "DE_TAX_NUMBER", "IT_VAT_CODE", "IT_FISCAL_CODE",
     "ES_NIF", "ES_NIE",
 })
+
+
+# What spaCy's NER yields; a model reading another language's text invents these.
+_NER_TYPES = frozenset({"PERSON", "LOCATION", "ORGANIZATION", "NRP", "DATE_TIME"})
 
 
 class ScrubEngine:
@@ -187,8 +192,15 @@ class ScrubEngine:
         if self.regex_only:
             findings.extend(detect_fallback(text))
         else:
-            for lang in self._langs(language):
-                findings.extend(self._model_findings(text, lang))
+            langs = tuple(self._langs(language))
+            for lang in langs:
+                for entity, start, end, score in self._model_findings(text, lang):
+                    if entity not in _NER_TYPES:
+                        findings.append((entity, start, end, score))
+                        continue
+                    # A model reading another language's text: keep only what reads as a name.
+                    findings.extend((entity, s, e, score)
+                                    for s, e in langguess.keep(text, start, end, lang, langs))
         if self.config.builtin_recognizers:
             findings.extend(detect_builtin(text))
         if deobfuscate:  # PII disguised with look-alikes, escapes, "[at]", base64...
