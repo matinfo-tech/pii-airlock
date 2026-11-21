@@ -8,6 +8,7 @@ token format and reversibility through a Mapping.
 from __future__ import annotations
 
 import hashlib
+import ipaddress
 import re
 import threading
 from collections import Counter, OrderedDict
@@ -50,6 +51,7 @@ class Detection:
 _LONG_IDS = frozenset({
     "IBAN_CODE", "CREDIT_CARD", "FR_NIR", "FR_SIRET", "FR_SIREN", "CH_AHV",
     "DE_TAX_ID", "DE_TAX_NUMBER", "IT_VAT_CODE", "IT_FISCAL_CODE",
+    "ES_NIF", "ES_NIE",
 })
 
 
@@ -197,7 +199,8 @@ class ScrubEngine:
         # Digit groups inside an IBAN, card or national ID read as a national phone number.
         ids = [(s, e) for (t, s, e) in best if t in _LONG_IDS]
         return [Detection(t, s, e, score) for (t, s, e), score in best.items()
-                if not (t == "PHONE_NUMBER" and any(a <= s and e <= b for a, b in ids))]
+                if not (t == "PHONE_NUMBER" and any(a <= s and e <= b for a, b in ids))
+                and not (t == "IP_ADDRESS" and _not_a_host(text, s, e))]
 
     def _langs(self, language: str | None) -> list[str]:
         if self.config.ner_backend == "gliner":
@@ -416,6 +419,21 @@ def _propagation_regex(terms: tuple[tuple[str, bool], ...]) -> re.Pattern:
     exact = [t for t, ci in terms if not ci]
     parts = ([f"(?i:{alt(folded)})"] if folded else []) + ([alt(exact)] if exact else [])
     return re.compile(r"(?<!\w)(?:" + "|".join(parts) + r")(?!\w)")
+
+
+_VERSION_BEFORE = re.compile(r"(?:\bv|\bver\.?|\bversion|\brelease|\bbuild)\s*$", re.I)
+
+
+def _not_a_host(text: str, start: int, end: int) -> bool:
+    """An "IP address" that identifies no one: this machine (127.0.0.1, ::1), "any"
+    (0.0.0.0), link-local, multicast, or a version number ("Version 1.2.3.4")."""
+    try:
+        addr = ipaddress.ip_address(text[start:end].strip("[]"))
+    except ValueError:
+        return False
+    if addr.is_loopback or addr.is_unspecified or addr.is_link_local or addr.is_multicast:
+        return True
+    return bool(_VERSION_BEFORE.search(text[max(start - 12, 0):start]))
 
 
 def _propagate(

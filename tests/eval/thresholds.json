@@ -71,6 +71,14 @@
   },
   "OBFUSCATED": {
     "leak_free": 1.0,
-    "clean": 0.9
+    "clean": 1.0
+  },
+  "ES_NIF": {
+    "recall": 1.0,
+    "precision": 0.95
+  },
+  "ES_NIE": {
+    "recall": 1.0,
+    "precision": 0.95
   }
 }

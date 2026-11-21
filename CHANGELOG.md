@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Spanish IDs in any language: `ES_NIF` (DNI/NIF, `12345678Z`) and `ES_NIE` (`X1234567L`),
+  validated by their mod-23 check letter.
+
 ### Security
 - Images, audio and files inside a gateway request are no longer forwarded blindly. New
   setting `binary_parts` (default `scan`): PDF and Word attachments are text-checked and
@@ -43,6 +47,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/eval/code_snippets.jsonl`.
 
 ### Fixed
+- `127.0.0.1`, `0.0.0.0`, `::1`, link-local and multicast addresses, and version numbers
+  (`Version 1.2.3.4`, `v10.0.0.1`) are no longer flagged as `IP_ADDRESS`: they identify
+  no one, and `127.0.0.1` flagged most gateway and server code.
 - `doctor` no longer reports a healthy pipx install as broken: a missing `pip` (normal
   under pipx) and missing gateway packages (needed only for `pii-airlock proxy`) are now
   `[info]` lines with the install command, and no longer set exit code 1.
