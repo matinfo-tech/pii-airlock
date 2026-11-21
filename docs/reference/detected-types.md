@@ -31,6 +31,14 @@ These check the number's built-in check digit, so a random number does not trigg
 | `PHONE_NUMBER` | International `+CC …` in any language, plus FR, CH, DE and IT national formats such as `06 12 34 56 78`, `079 123 45 67`, `030 12345678`, `333 1234567` | format |
 | `SECRET` | Keys for AWS, GitHub, Slack, OpenAI, Anthropic, Google and Stripe, JWTs, private keys, passwords in URLs, `password=…` values | format |
 
+## Disguised values
+
+Every type above is also found when it is disguised: invisible (zero-width) characters, look-alike letters
+from other alphabets, fullwidth digits, `%40` / `&#64;` / `\u0040` escapes, `[at]` `(dot)` and
+`at … dot …` spellings, letters separated by spaces, and base64 that decodes to personal data. The
+disguised text as written is what gets replaced. Only text that contains such a disguise is analysed a
+second time, so clean text costs nothing extra.
+
 ## Ignored by default
 
 These fire on almost every date and web link, so they are off unless you ask:
