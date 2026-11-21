@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-11-21
+
 ### Fixed
 - The tool hook no longer stops plain shell commands. Small spaCy models read `npm` as an
   organisation, `customer.txt` as a place and `git log --oneline` as a person, so
@@ -316,7 +318,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `install-hook`.
 - Config override chain: bundled defaults → user → project → CLI flags.
 
-[Unreleased]: https://github.com/matinfo-tech/pii-airlock/compare/v0.8.2...HEAD
+[Unreleased]: https://github.com/matinfo-tech/pii-airlock/compare/v0.8.3...HEAD
+[0.8.3]: https://github.com/matinfo-tech/pii-airlock/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/matinfo-tech/pii-airlock/compare/v0.8.0...v0.8.2
 [0.8.0]: https://github.com/matinfo-tech/pii-airlock/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/matinfo-tech/pii-airlock/compare/v0.6.0...v0.7.0
