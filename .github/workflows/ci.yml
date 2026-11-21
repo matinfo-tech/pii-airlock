@@ -13,6 +13,8 @@ on:
       - ".github/workflows/docs.yml"
       - ".github/workflows/eval-gliner.yml"
       - ".github/workflows/publish.yml"
+      - ".github/workflows/zizmor.yml"
+      - ".github/dependabot.yml"
   pull_request:
     paths-ignore:
       - "docs/**"
@@ -21,6 +23,8 @@ on:
       - ".github/workflows/docs.yml"
       - ".github/workflows/eval-gliner.yml"
       - ".github/workflows/publish.yml"
+      - ".github/workflows/zizmor.yml"
+      - ".github/dependabot.yml"
   workflow_dispatch:
 
 permissions:
@@ -33,12 +37,13 @@ concurrency:
 
 jobs:
   lint:
+    name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
       - run: pip install "ruff>=0.5"
@@ -54,10 +59,10 @@ jobs:
         os: [ubuntu-latest]
         python-version: ["3.10"]
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -89,10 +94,10 @@ jobs:
           - os: windows-latest
             python-version: "3.13"
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -108,13 +113,14 @@ jobs:
     # Detection quality: per-entity recall/precision on the labeled corpus and the
     # code-like inputs (tests/eval), with the real small spaCy models. Fails below
     # thresholds.json. Runs on PRs only: a merged PR already passed it.
+    name: eval gate
     if: github.event_name != 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
           cache: pip
