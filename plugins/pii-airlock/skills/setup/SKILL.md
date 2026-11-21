@@ -8,7 +8,7 @@ description: Set up or check pii-airlock, the PII guard for this project. Use wh
 The plugin's hooks call the `pii-airlock` CLI. Work through these steps and stop at the first failure.
 
 1. **CLI installed?** Run `pii-airlock --version`. If missing, ask the user to install it:
-   `brew install matinfo/tap/pii-airlock` or `pipx install pii-airlock`.
+   `brew install matinfo-tech/tap/pii-airlock` or `pipx install pii-airlock`.
    Until then the hooks block every prompt and tool call in guarded projects (fail closed).
 2. **Project guarded?** Run `pii-airlock status`. If it says `off`, ask the user before running
    `pii-airlock init` in the project root: it creates `.pii-airlock/` (policy + local maps) and

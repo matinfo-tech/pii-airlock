@@ -38,7 +38,7 @@ Detection runs 100% on your machine (macOS, Linux, Windows · Python ≥ 3.10), 
 ## 2-minute quickstart
 
 ```bash
-pipx install pii-airlock           # or: brew install matinfo/tap/pii-airlock
+pipx install pii-airlock           # or: brew install matinfo-tech/tap/pii-airlock
 cd my-project
 pii-airlock init                    # guard this project
 ```

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- The Homebrew tap moved: `brew install matinfo-tech/tap/pii-airlock` (the old
+  `matinfo/tap` name keeps working through GitHub's redirect).
+
 ## [0.9.0] - 2026-11-21
 
 **Upgrading:** run `pii-airlock download-models` once. It fetches the new `_md` default
