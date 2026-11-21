@@ -307,17 +307,34 @@ class ScrubEngine:
         `texts` are the strings `run` will pass, if already known; by default
         `run` is dry-run once to list them, so it must have no side effects
         (see collect_texts).
+
+        The transform also has a ``code`` method for code-like strings (URLs, tool
+        definitions, commands): there, a model detection must read as a name to count
+        (see codenoise), so `npm` or a URL is not tokenized as a person.
         """
-        texts = list(dict.fromkeys(collect_texts(run) if texts is None else texts))
+        from . import codenoise
+
+        code: set[str] = set()
+        if texts is None:
+            texts, code = _collect(run)
+        texts = list(dict.fromkeys(texts))
         self.prime(texts)
-        found = [(t, d) for t in texts for d in self.detect(t)]
+
+        def detect(t: str, is_code: bool, **kw) -> list[Detection]:
+            found = self.detect(t, **kw)
+            return codenoise.filter_detections(t, found) if is_code else found
+
+        found = [(t, d) for t in texts for d in detect(t, t in code)]
         self._check_blocked(d for _, d in found)  # before anything is minted
         known = list(dict.fromkeys((d.entity_type, d.text(t)) for t, d in found))
         redacted = self._redacted()
         mapping.learn([k for k in known if k[0] not in redacted], texts)
-        return run(lambda t: apply_detections(
-            t, self.detect(t, known=[*known, *mapping.items()]), mapping, redacted
-        ))
+
+        def scrubber(is_code: bool) -> Callable[[str], str]:
+            return lambda t: apply_detections(
+                t, detect(t, is_code, known=[*known, *mapping.items()]), mapping, redacted)
+
+        return run(_Transform(scrubber(False), scrubber(True)))
 
 
 @dataclass
@@ -467,6 +484,33 @@ def apply_detections(
         pos = d.end
     parts.append(text[pos:])
     return "".join(parts)
+
+
+class _Transform:
+    """A ``str -> str`` transform, plus ``code`` for code-like strings (see scrub_all)."""
+
+    def __init__(self, prose: Callable[[str], str], code: Callable[[str], str]) -> None:
+        self._prose, self.code = prose, code
+
+    def __call__(self, text: str) -> str:
+        return self._prose(text)
+
+
+def _collect(run: Callable[[Callable[[str], str]], object]) -> tuple[list[str], set[str]]:
+    """Like collect_texts, plus the set of strings passed to the ``code`` method."""
+    texts: list[str] = []
+    code: set[str] = set()
+
+    def grab(text: str) -> str:
+        texts.append(text)
+        return text
+
+    def grab_code(text: str) -> str:
+        code.add(text)
+        return grab(text)
+
+    run(_Transform(grab, grab_code))
+    return texts, code
 
 
 def collect_texts(run: Callable[[Callable[[str], str]], object]) -> list[str]:
