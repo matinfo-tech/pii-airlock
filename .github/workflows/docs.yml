@@ -11,9 +11,10 @@ on:
 permissions:
   contents: read
 
+# PR builds: a new push cancels the old build. Deploys from main queue, never cancelled.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('docs-pr-{0}', github.event.pull_request.number) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
