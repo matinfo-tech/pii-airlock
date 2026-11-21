@@ -17,7 +17,8 @@ def _run(monkeypatch, capsys, event, found=("EMAIL_ADDRESS",)):
 
     def analyze(_config, _event, texts):
         seen.extend(texts)
-        return [("", [SimpleNamespace(entity_type=t, start=0, end=0) for t in found])]
+        dets = [SimpleNamespace(entity_type=t, start=0, end=0, score=1.0) for t in found]
+        return [(text, dets if i == 0 else []) for i, text in enumerate(texts) if text.strip()]
 
     monkeypatch.setattr(_common, "_analyze", analyze)
     monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(event)))
@@ -83,7 +84,7 @@ _LIVE_CALLS = [
 def test_live_copilot_payloads_are_scanned(monkeypatch, capsys, tool, args, expected):
     reply, seen = _run(monkeypatch, capsys, {**_LIVE, "toolName": tool, "toolArgs": args})
     assert sorted(seen) == sorted(expected)
-    assert reply["permissionDecision"] in ("ask", "deny")
+    assert "PII detected" in reply["permissionDecisionReason"]  # not a fail-closed error
 
 
 def test_live_copilot_view_payload_scans_the_file_content(monkeypatch, capsys, tmp_path):
