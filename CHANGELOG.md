@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Security
+- The gateway now cleans **every string in a request** except a short, tested list of
+  protocol fields (model, role, type, ids, tool names, signatures, `authorization_token`).
+  Before, it cleaned a list of known text fields, and a leak test planting a value in every
+  field of real OpenAI, Anthropic and Gemini requests found 54 of 98 fields sent unchecked,
+  among them OpenAI `prediction.content` (file content), Responses `prompt.variables`,
+  `metadata`, `user`, tool and schema descriptions, Anthropic citations, Gemini
+  `executableCode` and code output. That test (`tests/test_gateway_leaks.py`) now guards
+  every provider.
+- Text files sent inline as base64 (`text/*`, JSON, CSV, YAML, SQL) are decoded, cleaned
+  and re-encoded. Images, audio and PDFs are still sent as they are.
 - Disguised personal data is now found (`pii_scrub/obfuscation.py`): zero-width
   characters, Cyrillic/Greek look-alikes, fullwidth digits and letters, URL / HTML / JSON
   escapes, `[at]` `(dot)` and `at … dot …` e-mails, spaced-out letters, line breaks
@@ -27,6 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   source file still often asks: product names in comments read as names.
 
 ### Changed
+- URLs, commands and tool or schema definitions in a request are checked like code (the
+  hook's name-shape filter, now `pii_scrub/codenoise.py`), so a URL or "Executes a bash
+  command" is no longer tokenized as a person or place by small models.
 - The eval code gate (`CODE` in `thresholds.json`, was `SHELL`) also scores
   `tests/eval/code_snippets.jsonl`.
 
