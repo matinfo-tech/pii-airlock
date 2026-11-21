@@ -21,13 +21,16 @@ the configured ``passthrough_paths``.
 from __future__ import annotations
 
 import json
+from collections import Counter
 from pathlib import Path
 
+from . import binary
 from .config import Config, load_config
 from .engine import PolicyBlocked
 from .mapping_store import build_mapping_store
 from .payload import (
     StreamState,
+    binary_parts,
     format_sse,
     get_adapter,
     restore_sse_event,
@@ -72,6 +75,22 @@ def _scrub_request(engine, payload: dict, adapter, mapping) -> dict:
     return engine.scrub_all(lambda f: scrub_payload(payload, adapter, f), mapping)
 
 
+def _binary_detector(engine):
+    """texts -> entity counts, with the gateway's engine and policy (see binary.py)."""
+    def detect(texts: list[str]) -> Counter:
+        engine.prime(texts)
+        return Counter(d.entity_type for t in texts for d in engine.detect(t))
+
+    return detect
+
+
+def _check_binary(detect, config: Config, payload: dict, adapter) -> str | None:
+    """Refusal message for the request's images, audio and files (see binary.py)."""
+    if config.binary_parts == "allow":
+        return None
+    return binary.check(binary_parts(payload, adapter), config.binary_parts, detect)
+
+
 def _is_passthrough(config: Config, provider: str, path: str) -> bool:
     """Whether an unscrubbable body may be forwarded raw (explicit opt-in)."""
     full = f"{provider}/{path}"
@@ -104,6 +123,7 @@ def build_app(
     token_key(config)  # fail at startup on a bad token_style / token_rotation
     upstreams = {**DEFAULT_UPSTREAMS, **(upstreams or {})}
     engine = engine if engine is not None else ScrubEngine(config)
+    detect_binary = _binary_detector(engine)
     client = client if client is not None else httpx.AsyncClient(
         timeout=httpx.Timeout(600.0, connect=10.0)
     )
@@ -156,6 +176,10 @@ def build_app(
                     status_code=400,
                 )
             try:
+                refusal = await run_in_threadpool(
+                    _check_binary, detect_binary, config, payload, adapter)
+                if refusal:
+                    return Response(refusal, status_code=403)
                 scrubbed = await run_in_threadpool(
                     _scrub_request, engine, payload, adapter, mapping
                 )

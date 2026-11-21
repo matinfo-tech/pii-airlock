@@ -71,6 +71,9 @@ class Config:
     hook_daemon_idle_minutes: int = 30
     hook_fallback: str = "inprocess"
     passthrough_paths: list[str] = field(default_factory=list)
+    # Images, audio and files inside a gateway request: scan (PDF/DOCX text is checked,
+    # images and audio pass with a warning, other files are refused), block, or allow.
+    binary_parts: str = "scan"
     token_style: str = "stable"
     token_rotation: str = "day"
     mapping_backend: str = "memory"
