@@ -15,6 +15,10 @@ Metrics, per entity type:
   leak-free  gold spans fully covered by detections of *any* type (what matters
              for privacy: a PERSON tokenized as LOCATION is still hidden)
 
+Disguised PII (obfuscated.jsonl: zero-width characters, look-alike letters, "[at]" and
+"dot", URL/HTML/JSON escapes, fullwidth digits, base64) is scored on leak-free coverage,
+and its clean texts on pattern false alarms (names are left to the main corpus).
+
 Code-like inputs (shell_commands.jsonl, code_snippets.jsonl: commands, search patterns,
 paths, source code) are scored the way the tool hook sees them, after its code filter:
   clean      inputs without PII that raise no detection (a false alarm stops the agent)
@@ -38,6 +42,7 @@ from pii_scrub.engine import ScrubEngine
 HERE = Path(__file__).parent
 CORPUS = HERE / "corpus.jsonl"
 CODE_CORPORA = (HERE / "shell_commands.jsonl", HERE / "code_snippets.jsonl")
+OBFUSCATED_CORPUS = HERE / "obfuscated.jsonl"
 THRESHOLDS = HERE / "thresholds.json"
 THRESHOLDS_BY_BACKEND = {"gliner": HERE / "thresholds-gliner.json"}
 SMALL_MODELS = {
@@ -181,6 +186,68 @@ def evaluate_code(cases: list[dict], models: dict[str, str],
     return report
 
 
+_NER_ONLY = frozenset({"PERSON", "LOCATION", "ORGANIZATION", "NRP"})
+
+
+@dataclass
+class ObfuscatedReport:
+    gold: int = 0
+    covered: int = 0
+    texts: int = 0       # clean texts
+    clean: int = 0       # of those, no pattern detection
+    leaks: list[str] = field(default_factory=list)
+    false_alarms: list[str] = field(default_factory=list)
+
+    @property
+    def leak_free(self) -> float:
+        return self.covered / self.gold if self.gold else 1.0
+
+    @property
+    def clean_rate(self) -> float:
+        return self.clean / self.texts if self.texts else 1.0
+
+
+def evaluate_obfuscated(cases: list[dict], models: dict[str, str],
+                        backend: str = "spacy") -> ObfuscatedReport:
+    if backend == "spacy":
+        models = available_models(models)
+    engine = ScrubEngine(Config(languages=list(models), models=models, ner_backend=backend))
+    report = ObfuscatedReport()
+    for case in cases:
+        text, dets = case["text"], engine.detect(case["text"])
+        gold = gold_spans(case)
+        if not gold:
+            report.texts += 1
+            extra = [d for d in dets if d.entity_type not in _NER_ONLY]
+            report.clean += not extra
+            if extra:
+                report.false_alarms.append(f"[{case['id']}] " + ", ".join(
+                    f"{d.entity_type} {text[d.start:d.end]!r}" for d in extra))
+        for entity, start, end in gold:
+            covered = _covered(start, end, [(d.start, d.end) for d in dets])
+            report.gold += 1
+            report.covered += covered
+            if not covered:
+                report.leaks.append(f"[{case['id']}] LEAK {entity}: {text[start:end]!r}")
+    return report
+
+
+def format_obfuscated_report(report: ObfuscatedReport, verbose: bool = False) -> str:
+    rows = [f"disguised PII: {report.covered}/{report.gold} caught, "
+            f"{report.clean}/{report.texts} clean texts without a false alarm"]
+    if verbose:
+        rows += ["", "Disguised leaks:", *report.leaks,
+                 "", "Disguised false alarms:", *report.false_alarms]
+    return "\n".join(rows)
+
+
+def check_obfuscated_gate(report: ObfuscatedReport, thresholds: dict) -> list[str]:
+    values = {"leak_free": report.leak_free, "clean": report.clean_rate}
+    return [f"OBFUSCATED {metric} {values[metric]:.2f} < {floor:.2f}"
+            for metric, floor in thresholds.get("OBFUSCATED", {}).items()
+            if values[metric] + 1e-9 < floor]
+
+
 def format_code_report(report: CodeReport, verbose: bool = False) -> str:
     rows = [f"code-like inputs: {report.clean}/{report.inputs} clean "
             f"({report.unfiltered} before the hook's filter), "
@@ -224,7 +291,7 @@ def check_gate(report: Report, thresholds: dict) -> list[str]:
     """Return failure messages for every metric below its threshold."""
     failures = []
     for entity, floors in thresholds.items():
-        if entity == "CODE":
+        if entity in ("CODE", "OBFUSCATED"):
             continue  # see check_code_gate
         st = report.total if entity == "ALL" else report.per_entity.get(entity, Stats())
         for metric, floor in floors.items():
@@ -254,10 +321,13 @@ def main(argv: list[str] | None = None) -> int:
     print(format_report(report, args.verbose))
     code = evaluate_code(load_code_corpora(), models, args.backend)
     print("\n" + format_code_report(code, args.verbose))
+    disguised = evaluate_obfuscated(load_corpus(OBFUSCATED_CORPUS), models, args.backend)
+    print(format_obfuscated_report(disguised, args.verbose))
     if args.gate:
         path = THRESHOLDS_BY_BACKEND.get(args.backend, THRESHOLDS)
         thresholds = json.loads(path.read_text("utf-8"))
-        failures = check_gate(report, thresholds) + check_code_gate(code, thresholds)
+        failures = (check_gate(report, thresholds) + check_code_gate(code, thresholds)
+                    + check_obfuscated_gate(disguised, thresholds))
         if failures:
             print("\nGATE FAILED:\n  " + "\n  ".join(failures), file=sys.stderr)
             return 1

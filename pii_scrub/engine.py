@@ -166,7 +166,8 @@ class ScrubEngine:
         return [d for d in rules.filter(text, found) + rules.match(text)
                 if cfg.action_for(d.entity_type) != "allow"]
 
-    def _analyze(self, text: str, language: str | None = None) -> list[Detection]:
+    def _analyze(self, text: str, language: str | None = None,
+                 deobfuscate: bool = True) -> list[Detection]:
         """Model (Presidio) detections above the configured score threshold.
 
         With no `language`, every configured language is analyzed and the
@@ -181,6 +182,12 @@ class ScrubEngine:
                 findings.extend(self._model_findings(text, lang))
         if self.config.builtin_recognizers:
             findings.extend(detect_builtin(text))
+        if deobfuscate:  # PII disguised with look-alikes, escapes, "[at]", base64...
+            from . import obfuscation
+
+            findings.extend(obfuscation.find(text, lambda t: [
+                (d.entity_type, d.start, d.end, d.score)
+                for d in self._analyze(t, language, deobfuscate=False)]))
         # Pattern recognizers run once per language: collapse identical spans.
         best: dict[tuple[str, int, int], float] = {}
         for entity_type, start, end, score in findings:

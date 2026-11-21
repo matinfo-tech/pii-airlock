@@ -10,6 +10,10 @@ Read this page once. It explains what you can rely on and what you cannot.
 - **Local detection.** Spotting personal data never uses the network. Only the gateway forwards traffic, and only after cleaning.
 - **Safe defaults.** If detection fails, hooks treat the input as sensitive. The gateway refuses requests it does not understand.
 - **Same value, same placeholder.** Within a mapping, and with stable placeholders across requests, so the AI can follow who is who.
+- **Disguised data.** An e-mail written `jean [at] acme [dot] ch` or `jean%40acme.ch`, an IBAN with invisible
+  characters in it, a phone number in fullwidth digits, look-alike Cyrillic letters, HTML or JSON escapes, letters
+  spaced out (`j e a n @ …`) and base64 that decodes to personal data are all found. The whole disguised text is
+  what gets hidden.
 - **Safe re-insertion.** Restored values go back through proper JSON encoding. A value with quotes, newlines or `<…>`
   cannot corrupt a request.
 

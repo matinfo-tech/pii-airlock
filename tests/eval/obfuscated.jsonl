@@ -1,0 +1,45 @@
+{"id": "zw-email", "text": "Write to jean.dupont​@acme-corp.ch today.", "pii": [["EMAIL_ADDRESS", "jean.dupont​@acme-corp.ch"]]}
+{"id": "zw-email2", "text": "mail: s​a​r​a​h@example.org", "pii": [["EMAIL_ADDRESS", "s​a​r​a​h@example.org"]]}
+{"id": "at-dot-words", "text": "Reach me at jean dot dupont at acme dot ch for the contract.", "pii": [["EMAIL_ADDRESS", "jean dot dupont at acme dot ch"]]}
+{"id": "at-dot-brackets", "text": "Contact: marie.curchod [at] acme-corp [dot] ch", "pii": [["EMAIL_ADDRESS", "marie.curchod [at] acme-corp [dot] ch"]]}
+{"id": "at-paren", "text": "send it to sarah(at)example(dot)org please", "pii": [["EMAIL_ADDRESS", "sarah(at)example(dot)org"]]}
+{"id": "at-curly", "text": "owner: d.miller{at}mail.example.com", "pii": [["EMAIL_ADDRESS", "d.miller{at}mail.example.com"]]}
+{"id": "url-encoded-email", "text": "GET /api/users?email=jean.dupont%40acme-corp.ch&page=2", "pii": [["EMAIL_ADDRESS", "jean.dupont%40acme-corp.ch"]]}
+{"id": "json-escaped-email", "text": "{\"owner\": \"jean.dupont\\u0040acme-corp.ch\"}", "pii": [["EMAIL_ADDRESS", "jean.dupont\\u0040acme-corp.ch"]]}
+{"id": "html-entity-email", "text": "<a href=\"mailto:sarah&#64;example.org\">mail</a>", "pii": [["EMAIL_ADDRESS", "sarah&#64;example.org"]]}
+{"id": "fullwidth-email", "text": "ｊｅａｎ＠ａｃｍｅ．ｃｈ is the address", "pii": [["EMAIL_ADDRESS", "ｊｅａｎ＠ａｃｍｅ．ｃｈ"]]}
+{"id": "cyrillic-email", "text": "Email: jеаn.duроnt@acme-corp.ch", "pii": [["EMAIL_ADDRESS", "jеаn.duроnt@acme-corp.ch"]]}
+{"id": "split-email", "text": "address is jean.dupont@\nacme-corp.ch (new line)", "pii": [["EMAIL_ADDRESS", "jean.dupont@\nacme-corp.ch"]]}
+{"id": "iban-nospace", "text": "Pay to CH9300762011623852957 by Friday.", "pii": [["IBAN_CODE", "CH9300762011623852957"]]}
+{"id": "iban-lower", "text": "iban ch93 0076 2011 6238 5295 7", "pii": [["IBAN_CODE", "ch93 0076 2011 6238 5295 7"]]}
+{"id": "iban-dashes", "text": "IBAN: DE89-3704-0044-0532-0130-00", "pii": [["IBAN_CODE", "DE89-3704-0044-0532-0130-00"]]}
+{"id": "iban-dots", "text": "account FR76.3000.6000.0112.3456.7890.189", "pii": [["IBAN_CODE", "FR76.3000.6000.0112.3456.7890.189"]]}
+{"id": "iban-zw", "text": "IBAN CH93​0076​2011​6238​5295​7", "pii": [["IBAN_CODE", "CH93​0076​2011​6238​5295​7"]]}
+{"id": "card-dots", "text": "card 4111.1111.1111.1111 exp 12/29", "pii": [["CREDIT_CARD", "4111.1111.1111.1111"]]}
+{"id": "card-nospace", "text": "charged 4111111111111111 yesterday", "pii": [["CREDIT_CARD", "4111111111111111"]]}
+{"id": "card-fullwidth", "text": "card ４１１１ １１１１ １１１１ １１１１", "pii": [["CREDIT_CARD", "４１１１ １１１１ １１１１ １１１１"]]}
+{"id": "phone-dots", "text": "call 079.555.12.34 tonight", "pii": [["PHONE_NUMBER", "079.555.12.34"]]}
+{"id": "phone-dashes-intl", "text": "mobile +41-79-555-12-34", "pii": [["PHONE_NUMBER", "+41-79-555-12-34"]]}
+{"id": "phone-zw", "text": "tel +41​ 79 555 12 34", "pii": [["PHONE_NUMBER", "+41​ 79 555 12 34"]]}
+{"id": "phone-fullwidth", "text": "tel ＋４１ ７９ ５５５ １２ ３４", "pii": [["PHONE_NUMBER", "＋４１ ７９ ５５５ １２ ３４"]]}
+{"id": "b64-email", "text": "token=amVhbi5kdXBvbnRAYWNtZS1jb3JwLmNo in the log", "pii": [["EMAIL_ADDRESS", "amVhbi5kdXBvbnRAYWNtZS1jb3JwLmNo"]]}
+{"id": "b64-iban", "text": "payload SUJBTiBDSDkzIDAwNzYgMjAxMSA2MjM4IDUyOTUgNw==", "pii": [["IBAN_CODE", "SUJBTiBDSDkzIDAwNzYgMjAxMSA2MjM4IDUyOTUgNw=="]]}
+{"id": "b64-json", "text": "Authorization context: eyJ1c2VyIjogInNhcmFoQGV4YW1wbGUub3JnIiwgImlkIjogN30=", "pii": [["EMAIL_ADDRESS", "eyJ1c2VyIjogInNhcmFoQGV4YW1wbGUub3JnIiwgImlkIjogN30="]]}
+{"id": "urlenc-name", "text": "q=Jean%20Dupont&lang=fr", "pii": [["PERSON", "Jean%20Dupont"]]}
+{"id": "cyrillic-name", "text": "Contract signed by Јеаn Duроnt yesterday.", "pii": [["PERSON", "Јеаn Duроnt"]]}
+{"id": "zw-name", "text": "Contract signed by Je​an Du​pont yesterday.", "pii": [["PERSON", "Je​an Du​pont"]]}
+{"id": "spaced-letters-email", "text": "j e a n @ a c m e . c h", "pii": [["EMAIL_ADDRESS", "j e a n @ a c m e . c h"]]}
+{"id": "ahv-dashes", "text": "AHV 756-9217-0769-85", "pii": [["CH_AHV", "756-9217-0769-85"]]}
+{"id": "clean-01", "text": "We meet at noon, then dot the i's and cross the t's.", "pii": []}
+{"id": "clean-02", "text": "The value is at least 3 dot 5 percent higher.", "pii": []}
+{"id": "clean-03", "text": "sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "pii": []}
+{"id": "clean-04", "text": "commit 9dbe1c6e7669191954e2a4cb203754fe435fa943 on main", "pii": []}
+{"id": "clean-05", "text": "requestId=YWJjZGVmZ2hpamtsbW5vcA and retry", "pii": []}
+{"id": "clean-06", "text": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk", "pii": []}
+{"id": "clean-08", "text": "Version 1.2.3.4 shipped on 2026-11-21.", "pii": []}
+{"id": "clean-09", "text": "Order #4412 total 1.234.567 CHF", "pii": []}
+{"id": "clean-10", "text": "Look at the docs at docs.example.com for more.", "pii": []}
+{"id": "clean-11", "text": "path%2Fto%2Ffile.txt was encoded", "pii": []}
+{"id": "clean-12", "text": "The word ｗｉｄｅ is written in fullwidth.", "pii": []}
+{"id": "clean-13", "text": "ISO 8601 timestamp 2026-11-21T00:24:38Z", "pii": []}
+{"id": "clean-14", "text": "Base64 of hello is aGVsbG8gd29ybGQ= by the way", "pii": []}

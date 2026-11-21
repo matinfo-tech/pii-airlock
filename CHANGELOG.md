@@ -18,11 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   every provider.
 - Text files sent inline as base64 (`text/*`, JSON, CSV, YAML, SQL) are decoded, cleaned
   and re-encoded. Images, audio and PDFs are still sent as they are.
-
-### Changed
-- URLs, commands and tool or schema definitions in a request are checked like code (the
-  hook's name-shape filter, now `pii_scrub/codenoise.py`), so a URL or "Executes a bash
-  command" is no longer tokenized as a person or place by small models.
+- Disguised personal data is now found (`pii_scrub/obfuscation.py`): zero-width
+  characters, Cyrillic/Greek look-alikes, fullwidth digits and letters, URL / HTML / JSON
+  escapes, `[at]` `(dot)` and `at … dot …` e-mails, spaced-out letters, line breaks
+  inside an e-mail, and base64 that decodes to PII. Detection runs on a cleaned view and
+  the original disguised span is what gets tokenized. On a new corpus
+  (`tests/eval/obfuscated.jsonl`), caught went from 19 of 32 to 32 of 32 with no new
+  false alarm; the eval gate (`OBFUSCATED`) now requires all of them.
 
 ### Fixed
 - The tool hook's code filter (0.8.3, shell commands only) now covers all code-like input:
@@ -35,6 +37,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   source file still often asks: product names in comments read as names.
 
 ### Changed
+- URLs, commands and tool or schema definitions in a request are checked like code (the
+  hook's name-shape filter, now `pii_scrub/codenoise.py`), so a URL or "Executes a bash
+  command" is no longer tokenized as a person or place by small models.
 - The eval code gate (`CODE` in `thresholds.json`, was `SHELL`) also scores
   `tests/eval/code_snippets.jsonl`.
 
