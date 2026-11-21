@@ -15,10 +15,10 @@ Metrics, per entity type:
   leak-free  gold spans fully covered by detections of *any* type (what matters
              for privacy: a PERSON tokenized as LOCATION is still hidden)
 
-Shell commands (shell_commands.jsonl) are scored the way the tool hook sees them, after
-its command-line filter:
-  clean      commands without PII that raise no detection (a false alarm stops the agent)
-  recall     gold spans in commands with PII that are still detected
+Code-like inputs (shell_commands.jsonl, code_snippets.jsonl: commands, search patterns,
+paths, source code) are scored the way the tool hook sees them, after its code filter:
+  clean      inputs without PII that raise no detection (a false alarm stops the agent)
+  recall     gold spans in inputs with PII that are still detected
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ from pii_scrub.engine import ScrubEngine
 
 HERE = Path(__file__).parent
 CORPUS = HERE / "corpus.jsonl"
-SHELL_CORPUS = HERE / "shell_commands.jsonl"
+CODE_CORPORA = (HERE / "shell_commands.jsonl", HERE / "code_snippets.jsonl")
 THRESHOLDS = HERE / "thresholds.json"
 THRESHOLDS_BY_BACKEND = {"gliner": HERE / "thresholds-gliner.json"}
 SMALL_MODELS = {
@@ -77,6 +77,10 @@ class Report:
 
 def load_corpus(path: Path = CORPUS) -> list[dict]:
     return [json.loads(line) for line in path.read_text("utf-8").splitlines() if line.strip()]
+
+
+def load_code_corpora() -> list[dict]:
+    return [case for path in CODE_CORPORA for case in load_corpus(path)]
 
 
 def gold_spans(case: dict) -> list[tuple[str, int, int]]:
@@ -129,8 +133,8 @@ def evaluate(cases: list[dict], models: dict[str, str], backend: str = "spacy") 
 
 
 @dataclass
-class ShellReport:
-    commands: int = 0    # commands without PII
+class CodeReport:
+    inputs: int = 0      # inputs without PII
     clean: int = 0       # of those, no detection after the hook's filter
     unfiltered: int = 0  # of those, no detection before it
     gold: int = 0
@@ -140,29 +144,29 @@ class ShellReport:
 
     @property
     def clean_rate(self) -> float:
-        return self.clean / self.commands if self.commands else 1.0
+        return self.clean / self.inputs if self.inputs else 1.0
 
     @property
     def recall(self) -> float:
         return self.found / self.gold if self.gold else 1.0
 
 
-def evaluate_shell(cases: list[dict], models: dict[str, str],
-                   backend: str = "spacy") -> ShellReport:
-    """Score shell commands as the pre-tool-use hook does for Bash / bash / powershell."""
-    from pii_scrub.hooks._common import _drop_shell_noise
+def evaluate_code(cases: list[dict], models: dict[str, str],
+                   backend: str = "spacy") -> CodeReport:
+    """Score code-like inputs as the pre-tool-use hook does (see _drop_code_noise)."""
+    from pii_scrub.hooks._common import _drop_code_noise
 
     if backend == "spacy":
         models = available_models(models)
     engine = ScrubEngine(Config(languages=list(models), models=models, ner_backend=backend))
-    report = ShellReport()
+    report = CodeReport()
     for case in cases:
         text = case["text"]
         raw = engine.detect(text)
-        ((_, kept),) = _drop_shell_noise([(text, raw)])
+        ((_, kept),) = _drop_code_noise([(text, raw)])
         gold = gold_spans(case)
         if not gold:
-            report.commands += 1
+            report.inputs += 1
             report.unfiltered += not raw
             report.clean += not kept
             if kept:
@@ -177,20 +181,20 @@ def evaluate_shell(cases: list[dict], models: dict[str, str],
     return report
 
 
-def format_shell_report(report: ShellReport, verbose: bool = False) -> str:
-    rows = [f"shell commands: {report.clean}/{report.commands} clean "
+def format_code_report(report: CodeReport, verbose: bool = False) -> str:
+    rows = [f"code-like inputs: {report.clean}/{report.inputs} clean "
             f"({report.unfiltered} before the hook's filter), "
             f"recall {report.found}/{report.gold}"]
     if verbose:
-        rows += ["", "Shell false alarms:", *report.false_alarms,
-                 "", "Shell misses:", *report.misses]
+        rows += ["", "Code false alarms:", *report.false_alarms,
+                 "", "Code misses:", *report.misses]
     return "\n".join(rows)
 
 
-def check_shell_gate(report: ShellReport, thresholds: dict) -> list[str]:
-    floors = thresholds.get("SHELL", {})
+def check_code_gate(report: CodeReport, thresholds: dict) -> list[str]:
+    floors = thresholds.get("CODE", {})
     values = {"clean": report.clean_rate, "recall": report.recall}
-    return [f"SHELL {metric} {values[metric]:.2f} < {floor:.2f}"
+    return [f"CODE {metric} {values[metric]:.2f} < {floor:.2f}"
             for metric, floor in floors.items() if values[metric] + 1e-9 < floor]
 
 
@@ -220,8 +224,8 @@ def check_gate(report: Report, thresholds: dict) -> list[str]:
     """Return failure messages for every metric below its threshold."""
     failures = []
     for entity, floors in thresholds.items():
-        if entity == "SHELL":
-            continue  # see check_shell_gate
+        if entity == "CODE":
+            continue  # see check_code_gate
         st = report.total if entity == "ALL" else report.per_entity.get(entity, Stats())
         for metric, floor in floors.items():
             value = getattr(st, metric)
@@ -248,12 +252,12 @@ def main(argv: list[str] | None = None) -> int:
               file=sys.stderr)
     report = evaluate(load_corpus(), models, args.backend)
     print(format_report(report, args.verbose))
-    shell = evaluate_shell(load_corpus(SHELL_CORPUS), models, args.backend)
-    print("\n" + format_shell_report(shell, args.verbose))
+    code = evaluate_code(load_code_corpora(), models, args.backend)
+    print("\n" + format_code_report(code, args.verbose))
     if args.gate:
         path = THRESHOLDS_BY_BACKEND.get(args.backend, THRESHOLDS)
         thresholds = json.loads(path.read_text("utf-8"))
-        failures = check_gate(report, thresholds) + check_shell_gate(shell, thresholds)
+        failures = check_gate(report, thresholds) + check_code_gate(code, thresholds)
         if failures:
             print("\nGATE FAILED:\n  " + "\n  ".join(failures), file=sys.stderr)
             return 1
