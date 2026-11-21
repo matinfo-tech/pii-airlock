@@ -12,9 +12,12 @@ The simple path is on [Install](/guide/install). This page covers the other meth
 ## Homebrew (macOS and Linux)
 
 ```bash
-brew install matinfo/tap/pii-airlock
+brew install matinfo-tech/tap/pii-airlock
 pii-airlock download-models
 ```
+
+The tap moved from `matinfo/tap` to `matinfo-tech/tap`. An existing `matinfo/tap` install keeps
+updating: GitHub redirects the old address.
 
 Homebrew installs the command, the hooks and the gateway into a **private virtualenv**: an isolated
 folder of Python packages that belongs to pii-airlock alone. You never activate it. The `pii-airlock`
