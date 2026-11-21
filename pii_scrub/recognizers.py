@@ -63,6 +63,16 @@ def _valid_steuer_id(match: str) -> bool:
     return int(d[10]) == (0 if check == 10 else check)
 
 
+_DNI_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
+
+
+def _valid_dni(match: str) -> bool:
+    """Spanish DNI/NIF (8 digits + letter) or NIE (X/Y/Z + 7 digits + letter): mod 23."""
+    raw = re.sub(r"[\s.\-]", "", match).upper()
+    number = str("XYZ".index(raw[0])) + raw[1:-1] if raw[0] in "XYZ" else raw[:-1]
+    return number.isdigit() and len(number) == 8 and _DNI_LETTERS[int(number) % 23] == raw[-1]
+
+
 def _valid_luhn(match: str) -> bool:
     return _luhn(_digits(match))
 
@@ -131,6 +141,12 @@ RULES: tuple[Rule, ...] = (
          _rx(r"(?<![\w+])(?:\+41 ?(?:\(0\) ?)?|0041 ?|0)[1-9]\d[ .\-]?\d{3}"
              r"[ .\-]?\d{2}[ .\-]?\d{2}(?![\w])"),
          score=0.8),
+    # --- Spain -------------------------------------------------------------
+    # The check letter makes a random 8-digit+letter string pass 1 time in 23.
+    Rule("ES_NIF", _rx(r"(?<![\w.\-])\d{2}\.?\d{3}\.?\d{3}[ \-]?[A-Za-z](?![\w])"),
+         score=0.9, validate=_valid_dni),
+    Rule("ES_NIE", _rx(r"(?<![\w.\-])[XYZxyz][ \-]?\d{7}[ \-]?[A-Za-z](?![\w])"),
+         score=0.9, validate=_valid_dni),
     # --- secrets -----------------------------------------------------------
     Rule("SECRET", _rx(r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?"
                        r"-----END [A-Z ]*PRIVATE KEY-----"), score=1.0),
