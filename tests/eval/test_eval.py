@@ -9,14 +9,18 @@ import pytest
 
 from tests.eval.run_eval import (
     CODE_CORPORA,
+    OBFUSCATED_CORPUS,
     SMALL_MODELS,
     THRESHOLDS,
     available_models,
     check_code_gate,
     check_gate,
+    check_obfuscated_gate,
     evaluate,
     evaluate_code,
+    evaluate_obfuscated,
     format_code_report,
+    format_obfuscated_report,
     format_report,
     gold_spans,
     load_code_corpora,
@@ -24,7 +28,8 @@ from tests.eval.run_eval import (
 )
 
 
-@pytest.mark.parametrize("path", [None, *CODE_CORPORA], ids=["corpus", "shell", "code"])
+@pytest.mark.parametrize("path", [None, *CODE_CORPORA, OBFUSCATED_CORPUS],
+                         ids=["corpus", "shell", "code", "obfuscated"])
 def test_corpus_labels_are_present_in_text(path):
     for case in load_corpus(*([path] if path else [])):
         found = {(e, case["text"][s:t]) for e, s, t in gold_spans(case)}
@@ -48,6 +53,15 @@ def test_code_input_gate():
     report = evaluate_code(load_code_corpora(), SMALL_MODELS)
     failures = check_code_gate(report, json.loads(THRESHOLDS.read_text("utf-8")))
     assert not failures, format_code_report(report, verbose=True)
+
+
+@pytest.mark.eval
+def test_disguised_pii_gate():
+    if set(available_models(SMALL_MODELS)) != set(SMALL_MODELS):
+        pytest.skip("run `python -m spacy download en_core_web_sm fr_core_news_sm`")
+    report = evaluate_obfuscated(load_corpus(OBFUSCATED_CORPUS), SMALL_MODELS)
+    failures = check_obfuscated_gate(report, json.loads(THRESHOLDS.read_text("utf-8")))
+    assert not failures, format_obfuscated_report(report, verbose=True)
 
 
 @pytest.mark.eval

@@ -68,5 +68,9 @@
   "CODE": {
     "clean": 0.95,
     "recall": 1.0
+  },
+  "OBFUSCATED": {
+    "leak_free": 1.0,
+    "clean": 0.9
   }
 }
