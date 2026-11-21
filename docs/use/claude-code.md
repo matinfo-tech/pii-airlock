@@ -84,15 +84,24 @@ pii-airlock allow "Acme SA"
 
 See [Tell it what is sensitive](/customize/allow-and-deny).
 
-### Shell commands
+### Shell commands and code
 
-A command line is not prose, and language models read it badly: `npm` looks like a company and
-`customer.txt` like a place. So in shell commands a name, place or organisation only counts when it is written
-like one: whole capitalised words such as `Sarah Johnson`, not a path, a flag, a file name or a tool name.
-The capital that opens a commit message (`-m "Fix login"`) does not count either. Emails, phone numbers, IBANs,
-cards, IDs and secrets are matched by pattern and are always caught.
+Code is not prose, and language models read it badly: `npm` looks like a company, `customer.txt` like a place
+and `useState` like a person. So in code-like input a name, place or organisation only counts when it is written
+like one: whole capitalised words such as `Sarah Johnson`, not a path, a flag, a file name, an identifier
+(`UserService`) or a keyword (`None`). The capital that opens a line, a comment or a commit message
+(`-m "Fix login"`) does not count either. Emails, phone numbers, IBANs, cards, IDs and secrets are matched by
+pattern and are always caught.
 
-The cost: a name typed in lower case in a command (`grep -r dupont .`) is not flagged. Add names you care about
+Code-like input is:
+
+- shell commands (`Bash`), search patterns and globs (`Grep`, Copilot's `grep` and `glob`), and file paths;
+- what is read, written or edited in a source file (`.py`, `.ts`, `.vue`, `.go`, `Dockerfile`...).
+
+Data and documents (`.json`, `.csv`, `.yaml`, `.sql`, `.md`, `.txt`...) are read as prose and every detection
+counts: fixtures, seeds and notes are where real names live.
+
+The cost: a name typed in lower case in code (`grep -r dupont .`) is not flagged. Add names you care about
 with [`pii-airlock deny`](/customize/allow-and-deny) and they are caught everywhere, in any case.
 
 ## Change how strict it is

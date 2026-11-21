@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The tool hook's code filter (0.8.3, shell commands only) now covers all code-like input:
+  `Grep` / `grep` / `glob` patterns, file paths, and what is read, written or edited in a
+  source file (by extension: `.py`, `.ts`, `.vue`, `.go`, `Dockerfile`...). It also drops
+  CamelCase identifiers (`UserService`), keywords (`None`, `True`) and the capital that
+  opens a line or comment. Data and documents (`.json`, `.csv`, `.yaml`, `.sql`, `.md`,
+  `.txt`) are still scanned as prose. On a new code corpus, clean snippets passing went
+  from 21 of 66 to 62 of 66 with the four small models, with no PII missed. Reading a
+  source file still often asks: product names in comments read as names.
+
+### Changed
+- The eval code gate (`CODE` in `thresholds.json`, was `SHELL`) also scores
+  `tests/eval/code_snippets.jsonl`.
+
 ## [0.8.3] - 2026-11-21
 
 ### Fixed
