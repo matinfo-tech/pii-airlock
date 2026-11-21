@@ -12,6 +12,7 @@ passes ``Mapping.restore``. One engine, many adapters.
 
 from __future__ import annotations
 
+import base64
 import json
 import re
 from collections.abc import Callable
@@ -39,6 +40,16 @@ _TEXT_KEYS = ("text", "title", "context", "refusal", "reasoning_content")
 #: requests, so never restored in responses either (a restored value would be
 #: sent back upstream in clear on the next turn).
 _SIGNED_BLOCKS = frozenset({"thinking", "redacted_thinking"})
+
+#: Request keys whose string values are never scrubbed: protocol structure the API
+#: validates (model, role, type, ids, tool names), opaque blobs the provider signed or
+#: encrypted, and credentials meant for the provider. Every other string is scrubbed.
+STRUCTURAL_KEYS = frozenset({
+    "model", "role", "type", "object", "name", "id", "tool_use_id", "tool_call_id",
+    "call_id", "item_id", "previous_response_id", "file_id", "cachedContent",
+    "media_type", "mime_type", "mimeType", "detail", "format", "language", "outcome",
+    "signature", "encrypted_content", "authorization_token", "cache_control",
+})
 
 
 def _deep(value: Any, transform: Transform) -> Any:
@@ -113,79 +124,91 @@ def _restore_deep(value: Any, restore: Transform) -> Any:
     return value
 
 
-def _apply_content(content: Any, transform: Transform) -> Any:
-    """Scrub a "content"-like field: a string, or a list of blocks / strings."""
-    if isinstance(content, str):
-        return transform(content)
-    if isinstance(content, list):
-        return [_scrub_block(part, transform) for part in content]
-    return content
+#: Subtrees written by the developer, not the user: tool and schema definitions, config.
+#: Scrubbed as code-like text (see codenoise): emails and names still count, while
+#: "Executes a bash command" is not read as a person and a place.
+_DEFINITION_KEYS = frozenset({"tools", "functions", "response_format", "tool_choice",
+                              "generationConfig", "toolConfig", "text"})
+#: Values that hold code or a command line.
+_CODE_KEYS = frozenset({"command", "code", "cmd", "pattern", "path", "file_path", "glob"})
+_URI = re.compile(r"[a-zA-Z][a-zA-Z0-9+.-]*://\S+|www\.\S+")
+_DATA_URI = re.compile(r"data:([\w.+-]+/[\w.+-]+)?((?:;[\w-]+=[^;,]*)*);base64,", re.ASCII)
+_BASE64 = re.compile(r"[A-Za-z0-9+/=\s_-]{256,}", re.ASCII)
+#: Sibling keys that say what a ``data`` field holds.
+_MIME_KEYS = ("media_type", "mime_type", "mimeType")
 
 
-def _scrub_block(block: Any, transform: Transform) -> Any:
-    """Scrub one message, content block or Responses input item.
+def _is_text_mime(mime: str | None) -> bool:
+    mime = (mime or "").lower()
+    return mime.startswith("text/") or mime in (
+        "application/json", "application/xml", "application/csv", "application/x-ndjson",
+        "application/yaml", "application/x-yaml", "application/sql")
 
-    One function covers every provider shape that carries user-controlled text:
-      * text parts (``text``) and plain strings (legacy ``prompt`` lists)
-      * nested ``content`` (Anthropic ``tool_result``, ``search_result``, messages)
-      * tool inputs (Anthropic ``tool_use.input``, Responses ``custom_tool_call``)
-      * JSON ``arguments`` (OpenAI ``tool_calls``, Responses ``function_call``)
-      * tool outputs (Responses ``function_call_output.output``)
-      * text documents (Anthropic ``document`` with a text/content source)
-    Binary parts (images, audio, files) are returned unchanged.
+
+def _base64_text(data: str, transform: Transform) -> str:
+    """Decode base64 text, scrub it, encode it back. Undecodable data is left as is."""
+    try:
+        text = base64.b64decode(data, validate=False).decode("utf-8")
+    except (ValueError, UnicodeDecodeError):
+        return data
+    return base64.b64encode(transform(text).encode("utf-8")).decode("ascii")
+
+
+def _code(transform: Transform) -> Transform:
+    """The transform for code-like text, when the scrubber offers one (engine.scrub_all)."""
+    return getattr(transform, "code", transform)
+
+
+def _sweep_string(value: str, transform: Transform, mime: str | None = None,
+                  code: bool = False) -> str:
+    """Scrub one request string. Base64 payloads are binary unless their type is text."""
+    uri = _DATA_URI.match(value)
+    if uri:
+        if _is_text_mime(uri.group(1)):
+            return value[: uri.end()] + _base64_text(value[uri.end():], transform)
+        return value  # an image, audio or document: see the binary-parts policy
+    if mime is not None:
+        return _base64_text(value, transform) if _is_text_mime(mime) else value
+    if _BASE64.fullmatch(value) and " " not in value.strip():
+        return value  # a bare base64 blob (audio, image) with no declared type
+    if code or _URI.fullmatch(value.strip()):
+        return _code(transform)(value)
+    return transform(value)
+
+
+def _sweep(value: Any, transform: Transform, code: bool = False) -> Any:
+    """Scrub every string in a request body, except protocol structure.
+
+    Deny by default: a field this module has never heard of is scrubbed too, so a new
+    provider feature cannot leak by omission. Left alone, and covered by
+    tests/test_gateway_leaks.py: the values of STRUCTURAL_KEYS, Anthropic's signed
+    thinking blocks, and binary data (base64 images, audio, PDFs). Base64 *text*
+    (a text/plain document, a CSV inline part) is decoded, scrubbed and re-encoded.
+    JSON-encoded strings (tool-call ``arguments``) are parsed so NER sees the values.
     """
-    if isinstance(block, str):
-        return transform(block)
-    if not isinstance(block, dict) or block.get("type") in _SIGNED_BLOCKS:
-        return block
-    out = dict(block)
-    for key in _TEXT_KEYS:
-        if isinstance(block.get(key), str):
-            out[key] = transform(block[key])
-    for key in ("content", "output", "summary"):
-        if isinstance(block.get(key), str | list):
-            out[key] = _apply_content(block[key], transform)
-    if "input" in block:
-        out["input"] = _deep(block["input"], transform)
-    if isinstance(block.get("arguments"), str):
-        out["arguments"] = _json_text(block["arguments"], transform)
-    if isinstance(block.get("tool_calls"), list):
-        out["tool_calls"] = [_scrub_function_call(tc, transform) for tc in block["tool_calls"]]
-    if isinstance(block.get("function_call"), dict):  # legacy OpenAI functions
-        out["function_call"] = _scrub_block(block["function_call"], transform)
-    source = block.get("source")
-    if isinstance(source, dict):
-        if source.get("type") == "text" and isinstance(source.get("data"), str):
-            out["source"] = {**source, "data": transform(source["data"])}
-        elif source.get("type") == "content":
-            out["source"] = {**source, "content": _apply_content(source.get("content"), transform)}
+    if isinstance(value, str):
+        return _sweep_string(value, transform, code=code)
+    if isinstance(value, list):
+        return [_sweep(v, transform, code) for v in value]
+    if not isinstance(value, dict) or value.get("type") in _SIGNED_BLOCKS:
+        return value
+    mime = next((value[k] for k in _MIME_KEYS if isinstance(value.get(k), str)), None)
+    # Anthropic's {"type": "text", "media_type": "text/plain", "data": ...} is plain text.
+    base64_source = value.get("type") == "base64" or (mime is not None
+                                                      and value.get("type") != "text")
+    out = {}
+    for key, v in value.items():
+        if key in STRUCTURAL_KEYS:
+            out[key] = v
+        elif key in _JSON_TEXT_KEYS and isinstance(v, str):
+            out[key] = _json_text(v, lambda t: _sweep_string(t, transform, code=code))
+        elif key == "data" and isinstance(v, str) and base64_source:
+            out[key] = _sweep_string(v, transform, mime or "application/octet-stream")
+        else:
+            nested = code or key in _CODE_KEYS or (key in _DEFINITION_KEYS
+                                                   and isinstance(v, dict | list))
+            out[key] = _sweep(v, transform, nested)
     return out
-
-
-def _scrub_function_call(call: Any, transform: Transform) -> Any:
-    if isinstance(call, dict) and isinstance(call.get("function"), dict):
-        return {**call, "function": _scrub_block(call["function"], transform)}
-    return call
-
-
-def _apply_parts(node: Any, transform: Transform) -> Any:
-    """Scrub a Gemini content node: ``parts[].text``, function calls and responses."""
-    if not isinstance(node, dict) or not isinstance(node.get("parts"), list):
-        return node
-    parts = []
-    for p in node["parts"]:
-        if isinstance(p, dict):
-            p = dict(p)
-            if isinstance(p.get("text"), str):
-                p["text"] = transform(p["text"])
-            if isinstance(p.get("functionCall"), dict):
-                p["functionCall"] = {**p["functionCall"],
-                                     "args": _deep(p["functionCall"].get("args"), transform)}
-            if isinstance(p.get("functionResponse"), dict):
-                fr = p["functionResponse"]
-                p["functionResponse"] = {**fr, "response": _deep(fr.get("response"), transform)}
-        parts.append(p)
-    return {**node, "parts": parts}
 
 
 # --- streaming token reassembly ------------------------------------------
@@ -275,8 +298,11 @@ class PayloadAdapter:
     request_endpoints: tuple[str, ...] = ()
 
     def scrub_request(self, body: dict, transform: Transform) -> dict:
-        """Return a copy of a request body with user text transformed."""
-        raise NotImplementedError
+        """Return a copy of a request body with every user-controlled string transformed.
+
+        The same for every provider (see _sweep): what differs between APIs is where
+        model text sits in *responses*, which the methods below handle."""
+        return _sweep(body, transform)
 
     def restore_response(self, body: Any, transform: Transform) -> Any:
         """Return a copy of a (non-streaming) response body with tokens restored."""
@@ -300,19 +326,6 @@ class OpenAIAdapter(PayloadAdapter):
     name = "openai"
     request_endpoints = ("chat/completions", "completions", "responses",
                          "embeddings", "moderations")
-
-    def scrub_request(self, body: dict, transform: Transform) -> dict:
-        out = dict(body)
-        if isinstance(body.get("messages"), list):
-            out["messages"] = [_scrub_block(m, transform) for m in body["messages"]]
-        # `prompt` (legacy completions), `input` (Responses, embeddings, moderations):
-        # a string, a list of strings / token ids, or a list of Responses items.
-        for key in ("prompt", "input"):
-            if key in body:
-                out[key] = _apply_content(body[key], transform)
-        if isinstance(body.get("instructions"), str):  # Responses system prompt
-            out["instructions"] = transform(body["instructions"])
-        return out
 
     def restore_event(self, event, chunk, state):
         kind = chunk.get("type")
@@ -439,23 +452,6 @@ class AnthropicAdapter(PayloadAdapter):
     name = "anthropic"
     request_endpoints = ("messages", "complete")
 
-    def scrub_request(self, body: dict, transform: Transform) -> dict:
-        out = dict(body)
-        if isinstance(body.get("requests"), list):  # messages/batches
-            out["requests"] = [
-                {**r, "params": self.scrub_request(r["params"], transform)}
-                if isinstance(r, dict) and isinstance(r.get("params"), dict)
-                else r
-                for r in body["requests"]
-            ]
-        if "system" in body:
-            out["system"] = _apply_content(body["system"], transform)
-        if isinstance(body.get("messages"), list):
-            out["messages"] = [_scrub_block(m, transform) for m in body["messages"]]
-        if isinstance(body.get("prompt"), str):  # legacy complete
-            out["prompt"] = transform(body["prompt"])
-        return out
-
     def restore_event(self, event, chunk, state):
         kind = chunk.get("type")
         idx = chunk.get("index", 0)
@@ -496,23 +492,6 @@ class GeminiAdapter(PayloadAdapter):
     name = "gemini"
     request_endpoints = ("generateContent", "streamGenerateContent", "countTokens",
                          "embedContent", "batchEmbedContents")
-
-    def scrub_request(self, body: dict, transform: Transform) -> dict:
-        out = dict(body)
-        if isinstance(body.get("contents"), list):
-            out["contents"] = [_apply_parts(c, transform) for c in body["contents"]]
-        for key in ("systemInstruction", "content"):  # content: embedContent
-            if isinstance(body.get(key), dict):
-                out[key] = _apply_parts(body[key], transform)
-        if isinstance(body.get("generateContentRequest"), dict):  # countTokens
-            out["generateContentRequest"] = self.scrub_request(
-                body["generateContentRequest"], transform)
-        if isinstance(body.get("requests"), list):  # batchEmbedContents
-            out["requests"] = [
-                self.scrub_request(r, transform) if isinstance(r, dict) else r
-                for r in body["requests"]
-            ]
-        return out
 
     def restore_event(self, event, chunk, state):
         if not isinstance(chunk.get("candidates"), list):
