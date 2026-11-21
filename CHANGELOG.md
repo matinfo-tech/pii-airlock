@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-21
+
+**Upgrading:** run `pii-airlock download-models` once. It fetches the new `_md` default
+models into `~/.local/share/pii-airlock/models`, where later upgrades keep them; until
+then, your installed models stand in. On Python 3.15, reinstall on 3.14 first:
+`pipx reinstall --python python3.14 pii-airlock`. `pii-airlock doctor` checks both.
+
 ### Added
 - Spanish IDs in any language: `ES_NIF` (DNI/NIF, `12345678Z`) and `ES_NIE` (`X1234567L`),
   validated by their mod-23 check letter.
@@ -397,7 +404,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `install-hook`.
 - Config override chain: bundled defaults → user → project → CLI flags.
 
-[Unreleased]: https://github.com/matinfo-tech/pii-airlock/compare/v0.8.3...HEAD
+[Unreleased]: https://github.com/matinfo-tech/pii-airlock/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/matinfo-tech/pii-airlock/compare/v0.8.3...v0.9.0
 [0.8.3]: https://github.com/matinfo-tech/pii-airlock/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/matinfo-tech/pii-airlock/compare/v0.8.0...v0.8.2
 [0.8.0]: https://github.com/matinfo-tech/pii-airlock/compare/v0.7.0...v0.8.0
