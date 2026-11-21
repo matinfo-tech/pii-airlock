@@ -48,7 +48,7 @@ def test_load_config_layers_user_and_project(tmp_path):
     trust.trust(project)  # reviewed: loosening settings apply
 
     cfg = load_config(cwd=project / "sub")  # found from a subdirectory too
-    assert cfg.allow_list == ["Mathieu Meylan", "Acme SA"]  # accumulated
+    assert cfg.allow_list[-2:] == ["Mathieu Meylan", "Acme SA"]  # accumulated after defaults
     assert cfg.deny_list == {"CONFIDENTIAL": ["Phoenix"]}
     assert cfg.prompt_decision == "warn"
 
@@ -86,3 +86,9 @@ def test_invalid_custom_pattern_message():
     eng = _engine([], custom_patterns=[{"entity": "X", "regex": "("}])
     with pytest.raises(ValueError, match="custom_patterns"):
         eng.detect("anything")
+
+
+def test_default_allow_list_ships_tool_names_not_first_names(tmp_path):
+    cfg = load_config(cwd=tmp_path)
+    assert {"pii-airlock", "Presidio", "Anthropic"} <= set(cfg.allow_list)
+    assert "Claude" not in cfg.allow_list  # also a first name: must stay detectable

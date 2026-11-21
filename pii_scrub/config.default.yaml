@@ -34,6 +34,20 @@ exclude_entities:
   - US_PASSPORT
   - IN_VEHICLE_REGISTRATION
 
+# Terms never treated as PII, whatever the project: this tool's own name and the
+# tools it is built on, which NER models otherwise tag as people or organizations.
+# Your own allow_list (user or project config) is added to this one. Bare "Claude"
+# is left out on purpose: it is also a first name.
+allow_list:
+  - pii-airlock
+  - PII
+  - pii_scrub
+  - Airlock
+  - Presidio
+  - spaCy
+  - Anthropic
+  - Claude Code
+
 # Per-entity minimum confidence, overriding score_threshold, e.g.
 #   score_thresholds: {PERSON: 0.7, PHONE_NUMBER: 0.4}
 score_thresholds: {}
