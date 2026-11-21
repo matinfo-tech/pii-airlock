@@ -295,3 +295,23 @@ def test_scrub_keeps_the_map_in_the_project_encrypted_and_restore_finds_it(tmp_p
     restored = CliRunner().invoke(cli.app, ["restore", str(out)])
     assert restored.exit_code == 0, restored.output
     assert "jean@acme.fr" in restored.output
+
+
+def test_doctor_names_a_stand_in_model(monkeypatch):
+    from pii_scrub import models
+
+    out = _capture_echo(monkeypatch)
+    monkeypatch.setattr(
+        cli, "_build_config", lambda lang, threshold: _fake_config({"en": "en_core_web_md"})
+    )
+    monkeypatch.setattr(cli, "_missing_proxy_deps", lambda: [])
+    monkeypatch.setattr(cli, "_model_installed", lambda model: True)
+    monkeypatch.setattr(cli, "_model_problem", lambda model: None)
+    monkeypatch.setattr(models, "in_environment_only", lambda model: False)
+    monkeypatch.setattr(models, "substitute", lambda model: "en_core_web_lg")
+    monkeypatch.setattr(cli, "_daemon_status", lambda config: "not running")
+
+    cli.doctor()
+
+    rendered = "\n".join(t for t, _ in out)
+    assert "[info] model stand-in: en_core_web_md -> en_core_web_lg" in rendered

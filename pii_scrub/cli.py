@@ -490,7 +490,8 @@ def doctor() -> None:
         models = _configured_models(config)
         missing_models = [m for m in models if not _model_installed(m)]
         # Loads now, but lives inside the app's environment: a reinstall drops it.
-        fragile = [m for m in models if m not in missing_models and store.in_environment_only(m)]
+        fragile = [store.substitute(m) or m for m in models
+                   if m not in missing_models and store.in_environment_only(m)]
         # Importable is not enough: spaCy can fail on load (e.g. on a too-new Python).
         broken = [problem for m in models if m not in missing_models
                   for problem in [_model_problem(m)] if problem]
@@ -512,6 +513,12 @@ def doctor() -> None:
         ("mapping roundtrip", "ok" if mapping_ok else "fail", "ok"),
         ("hook daemon", "ok", _daemon_status(config)),
     ]
+    stand_ins = [f"{m} -> {store.substitute(m)}" for m in models
+                 if config.ner_backend != "gliner" and store.substitute(m)]
+    if stand_ins:
+        checks.insert(5, ("model stand-in", "info",
+                          f"{', '.join(stand_ins)} (installed size used; "
+                          "`pii-airlock download-models` gets the configured one)"))
     if fragile:
         checks.insert(5, ("model location", "info",
                           f"{', '.join(fragile)} only inside the app's environment, which a "

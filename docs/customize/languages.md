@@ -11,7 +11,7 @@ looks like a name is kept from it: the English model would otherwise tag ordinar
    ```yaml
    languages: [en, fr, de]
    models:
-     de: de_core_news_lg
+     de: de_core_news_md
    ```
 
 2. Download the models and check:

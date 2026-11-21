@@ -17,6 +17,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -87,11 +88,7 @@ def stored(model: str) -> Path | None:
     return best[1] if best else None
 
 
-def locate(model: str) -> str | None:
-    """What spaCy should load for `model`: a path, an installed package name, or None.
-
-    `model` may itself be a path to a model directory.
-    """
+def _exact(model: str) -> str | None:
     if Path(model).is_dir():
         return model
     path = stored(model)
@@ -101,8 +98,43 @@ def locate(model: str) -> str | None:
     return model if importlib.util.find_spec(model) is not None else None
 
 
+_CORE = re.compile(r"[a-z]{2,3}_core_(?:web|news)_(?:sm|md|lg)")
+
+
+def siblings(model: str) -> list[str]:
+    """Other sizes of a spaCy core model, best stand-in first: md, then lg, then sm."""
+    if not _CORE.fullmatch(model):
+        return []
+    base = model[:-3]
+    return [f"{base}_{size}" for size in ("md", "lg", "sm") if f"{base}_{size}" != model]
+
+
+def substitute(model: str) -> str | None:
+    """The installed size used in place of `model`, when `model` itself is missing.
+
+    The default moved from lg to md: an install with only lg (or sm) keeps detecting
+    instead of failing closed until `download-models` is run.
+    """
+    if _exact(model) is not None:
+        return None
+    return next((other for other in siblings(model) if _exact(other) is not None), None)
+
+
+def locate(model: str) -> str | None:
+    """What spaCy should load for `model`: a path, an installed package name, or None.
+
+    `model` may itself be a path to a model directory. A missing spaCy core model is
+    stood in for by another installed size of it (see :func:`substitute`).
+    """
+    where = _exact(model)
+    if where is None and (other := substitute(model)):
+        where = _exact(other)
+    return where
+
+
 def in_environment_only(model: str) -> bool:
     """`model` loads, but only from the app's environment (a reinstall can drop it)."""
+    model = substitute(model) or model
     if Path(model).is_dir() or stored(model) is not None:
         return False
     return importlib.util.find_spec(model) is not None

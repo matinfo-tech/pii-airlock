@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   validated by their mod-23 check letter.
 
 ### Changed
+- Default models are now `en_core_web_md` and `fr_core_news_md` (about 40 MB each,
+  instead of 400–570 MB for `_lg`). On the eval corpus `_md` catches every name `_lg`
+  catches and hides fewer ordinary words; `_sm` leaves part of a name visible. An install that only has
+  another size of a configured spaCy model keeps using it, so upgrading does not stop
+  detection; `doctor` notes the stand-in and `download-models` fetches `_md`.
 - **Upgrades and reinstalls no longer break the install.** `download-models` now stores
   spaCy models in `~/.local/share/pii-airlock/models` (`$XDG_DATA_HOME`), outside the
   Python environment, and pii-airlock loads them from there. pipx, uv or Homebrew
