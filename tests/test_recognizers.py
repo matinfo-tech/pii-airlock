@@ -14,6 +14,12 @@ def _found(text):
     ("nir 185057800608491", "FR_NIR", "185057800608491"),
     ("Corse: 190012B12345642", "FR_NIR", "190012B12345642"),
     ("AVS 756.9217.0769.85", "CH_AHV", "756.9217.0769.85"),
+    ("DNI 12345678Z", "ES_NIF", "12345678Z"),
+    ("NIF: 12.345.678-Z", "ES_NIF", "12.345.678-Z"),
+    ("dni 00000000t", "ES_NIF", "00000000t"),
+    ("NIE X1234567L", "ES_NIE", "X1234567L"),
+    ("nie Y-1234567-X", "ES_NIE", "Y-1234567-X"),
+    ("NIE Z7654321H", "ES_NIE", "Z7654321H"),
     ("SIRET 732 829 320 00074", "FR_SIRET", "732 829 320 00074"),
     ("SIREN: 732829320", "FR_SIREN", "732829320"),
     ("Tél. 06 12 34 56 78", "PHONE_NUMBER", "06 12 34 56 78"),
@@ -31,6 +37,9 @@ def test_identifiers_detected(text, entity, value):
     "order 732829321",                # 9 digits, no SIREN keyword
     "SIRET 732 829 320 00075",        # Luhn fails
     "version 1.2.3, port 8080",
+    "DNI 12345678A",                  # wrong check letter
+    "NIE X1234567A",                  # wrong check letter
+    "build ab12345678Z",              # part of a longer token
 ])
 def test_invalid_or_unrelated_not_detected(text):
     assert not {e for e, _ in _found(text)} & {"FR_NIR", "CH_AHV", "FR_SIREN", "FR_SIRET"}
@@ -114,3 +123,19 @@ def test_de_it_rules_ignore_lookalikes(text):
 
 def test_vat_keyword_without_prefix():
     assert ("IT_VAT_CODE", "12345678903") in _found("P.IVA 12345678903 della ditta.")
+
+
+@pytest.mark.parametrize("text,ip,flagged", [
+    ("server at 127.0.0.1:8745", "127.0.0.1", False),
+    ("listen on 0.0.0.0", "0.0.0.0", False),
+    ("link-local 169.254.10.20", "169.254.10.20", False),
+    ("Version 1.2.3.4 shipped", "1.2.3.4", False),
+    ("upgrade to v10.0.0.1 now", "10.0.0.1", False),
+    ("The login came from 203.0.113.42 at night", "203.0.113.42", True),
+    ("office LAN 192.168.1.20", "192.168.1.20", True),
+])
+def test_ip_addresses_that_identify_no_one_are_dropped(text, ip, flagged):
+    from pii_scrub.engine import _not_a_host
+
+    start = text.index(ip)
+    assert _not_a_host(text, start, start + len(ip)) is not flagged
