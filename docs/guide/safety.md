@@ -49,11 +49,13 @@ map file.** Everything about maps, keys and encryption is on one page:
 
 ## Ways to improve accuracy
 
-1. Use the larger models (the default `_lg`) or [GLiNER](/customize/languages#many-languages-with-one-model-gliner).
+1. Keep the default `_md` models rather than `_sm`: on the test corpus, `_sm` leaves part of a name visible where `_md` and `_lg` hide it all.
+   `_lg` catches no more than `_md` there and hides more ordinary words. Or try
+   [GLiNER](/customize/languages#many-languages-with-one-model-gliner).
 2. [Deny](/customize/allow-and-deny) your internal names, so they are always caught.
 3. Set the [action](/customize/actions) for critical types to `block`.
 4. Lower the threshold (for example `score_threshold: 0.4`, see [Settings](/reference/settings#detection))
-   to catch more, accepting more false alarms.
+   to catch more, accepting more false alarms (at 0.4, phone numbers are over-detected on the test corpus).
 
 ## Reporting a vulnerability
 

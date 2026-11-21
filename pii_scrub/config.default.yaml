@@ -11,8 +11,8 @@ languages:
 # Map language code -> spaCy model. Add a language by installing its model
 # (python -m spacy download <model>) and adding a line here.
 models:
-  en: en_core_web_lg
-  fr: fr_core_news_lg
+  en: en_core_web_md
+  fr: fr_core_news_md
 
 # Minimum confidence (0.0–1.0) for a detection to count.
 score_threshold: 0.5

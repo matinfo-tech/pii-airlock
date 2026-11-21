@@ -31,7 +31,7 @@ bundled defaults → ~/.config/pii-airlock/config.yaml (you, every project)
 | Setting | Default | Meaning |
 |---|---|---|
 | `languages` | `[en, fr]` | Languages to analyse |
-| `models` | `en_core_web_lg`, `fr_core_news_lg` | Model used per language |
+| `models` | `en_core_web_md`, `fr_core_news_md` | Model used per language. A missing spaCy model is stood in for by another installed size of it (`doctor` says so) |
 | `score_threshold` | `0.5` | Minimum confidence. Lower catches more and flags more false positives. |
 | `score_thresholds` | `{}` | Per-type minimum, for example `{PERSON: 0.7}` |
 | `entities` | `[]` | Only these types. Empty means all. |

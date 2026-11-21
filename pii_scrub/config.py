@@ -33,7 +33,10 @@ USER_FILE = _CONFIG_HOME / "pii-airlock" / "config.yaml"
 # Built-in defaults. These make pii-airlock work even if no config file is found,
 # so an install can never end up with an empty model map. The bundled
 # config.default.yaml mirrors these for users to copy and override.
-_DEFAULT_MODELS = {"en": "en_core_web_lg", "fr": "fr_core_news_lg"}
+# md: same names and places caught as lg on the eval corpus, fewer ordinary words
+# hidden, a tenth of the download. An install with lg only keeps using it (see
+# models.substitute).
+_DEFAULT_MODELS = {"en": "en_core_web_md", "fr": "fr_core_news_md"}
 
 # Presidio entity types skipped unless listed in `entities`. In code, shell
 # commands and URLs they fire constantly (every date, every link, any 9-digit

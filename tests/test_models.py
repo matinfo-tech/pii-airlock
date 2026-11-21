@@ -177,3 +177,42 @@ def test_check_reports_a_model_that_does_not_load(monkeypatch, tmp_path):
 
     assert "OverflowError" in models.check(str(tmp_path))
     assert "not installed" in models.check("xx_missing_model")
+
+
+def _store_copy(model: str, version: str = "3.8.0") -> Path:
+    lang, _, name = model.partition("_")
+    path = models.home() / f"{model}-{version}"
+    path.mkdir(parents=True)
+    (path / "meta.json").write_text(json.dumps(
+        {"lang": lang, "name": name, "version": version, "spacy_version": ">=3.8.0,<3.9.0"}))
+    return path
+
+
+def test_siblings_prefer_md_then_lg_then_sm():
+    assert models.siblings("en_core_web_md") == ["en_core_web_lg", "en_core_web_sm"]
+    assert models.siblings("fr_core_news_lg") == ["fr_core_news_md", "fr_core_news_sm"]
+    assert models.siblings("my_custom_model") == []
+
+
+def test_an_install_with_lg_only_keeps_working_after_the_default_moved_to_md(monkeypatch):
+    monkeypatch.setattr(models.importlib.util, "find_spec", lambda name: None)
+    lg = _store_copy("en_core_web_lg")
+
+    assert models.substitute("en_core_web_md") == "en_core_web_lg"
+    assert models.locate("en_core_web_md") == str(lg)
+
+
+def test_the_configured_size_wins_when_installed(monkeypatch):
+    monkeypatch.setattr(models.importlib.util, "find_spec", lambda name: None)
+    _store_copy("en_core_web_lg")
+    md = _store_copy("en_core_web_md")
+
+    assert models.substitute("en_core_web_md") is None
+    assert models.locate("en_core_web_md") == str(md)
+
+
+def test_no_size_installed_is_still_missing(monkeypatch):
+    monkeypatch.setattr(models.importlib.util, "find_spec", lambda name: None)
+
+    assert models.locate("en_core_web_md") is None
+    assert models.substitute("en_core_web_md") is None
