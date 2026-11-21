@@ -96,3 +96,4 @@
 {"id": "names-de-25", "lang": "de", "text": "Natascha hat gestern angerufen und um Rückruf gebeten.", "pii": [["PERSON", "Natascha"]]}
 {"id": "names-it-26", "lang": "it", "text": "Francesca ha già firmato il contratto.", "pii": [["PERSON", "Francesca"]]}
 {"id": "names-fr-27", "lang": "fr", "text": "Je dois voir Laurent avant la réunion.", "pii": [["PERSON", "Laurent"]]}
+{"id":"en-tool-names-allowed","lang":"en","text":"Run pii-airlock:setup, then ask Sarah Johnson to check the PII guard with Presidio and spaCy.","pii":[["PERSON","Sarah Johnson"]]}

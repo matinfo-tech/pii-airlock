@@ -38,7 +38,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from pii_scrub import models as model_store
-from pii_scrub.config import Config
+from pii_scrub.config import _DEFAULT_FILE, Config, _read_yaml
 from pii_scrub.engine import ScrubEngine
 
 HERE = Path(__file__).parent
@@ -119,6 +119,8 @@ def available_models(models: dict[str, str]) -> dict[str, str]:
 
 
 _ENGINES: dict[tuple, ScrubEngine] = {}
+#: The allow list every install ships with (bundled config.default.yaml).
+DEFAULT_ALLOW: list[str] = Config().merged_with(_read_yaml(_DEFAULT_FILE)).allow_list
 #: Config overrides for every engine the harness builds (--threshold).
 SETTINGS: dict = {}
 
@@ -128,7 +130,8 @@ def _engine(models: dict[str, str], backend: str) -> ScrubEngine:
     key = (tuple(sorted(models.items())), backend, tuple(sorted(SETTINGS.items())))
     if key not in _ENGINES:
         _ENGINES[key] = ScrubEngine(Config(languages=list(models), models=models,
-                                           ner_backend=backend, **SETTINGS))
+                                           ner_backend=backend, allow_list=DEFAULT_ALLOW,
+                                           **SETTINGS))
     return _ENGINES[key]
 
 

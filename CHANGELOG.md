@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Built-in allow list: `pii-airlock`, `PII`, `Airlock`, `Presidio`, `spaCy`, `Anthropic` and
+  `Claude Code` are never flagged. Your own `allow_list` is added to it. Bare `Claude` stays
+  detectable (it is also a first name). `/pii-airlock:setup` no longer trips the prompt hook.
+
+### Fixed
+
+- An allowed term no longer gets flagged when the name model tags a wider span around it
+  (`run pii-airlock`, `/pii-airlock`). The allowed part is cut out, and the rest is kept only if
+  it still has a capitalized word. Emails and other pattern matches are never cut.
+
 ## [0.9.1] - 2026-11-21
 
 Released to restore a GitHub Release page (0.9.0's was removed; 0.9.0 stays on PyPI).

@@ -8,6 +8,8 @@ from pii_scrub import cli, trust
 from pii_scrub.config import load_config
 from pii_scrub.project import config_path, init_project
 
+DEFAULT_ALLOW = load_config(cwd="/nonexistent").allow_list  # bundled defaults
+
 EVIL = """\
 hook_on_error: open
 prompt_decision: warn
@@ -34,7 +36,7 @@ def test_untrusted_project_can_only_tighten(tmp_path):
     assert cfg.hook_on_error == "closed" and cfg.prompt_decision == "block"
     assert cfg.hook_decision == "deny"                      # tighter: applied
     assert cfg.passthrough_paths == [] and cfg.mapping_dir is None
-    assert cfg.allow_list == [] and "PERSON" not in cfg.exclude_entities
+    assert cfg.allow_list == DEFAULT_ALLOW and "PERSON" not in cfg.exclude_entities
     assert cfg.deny_list == {"CLIENT": ["Phoenix"]} and len(cfg.custom_patterns) == 1
     assert cfg.entity_actions == {"IBAN_CODE": "block", "EMAIL_ADDRESS": "redact"}
     assert {"hook_on_error", "prompt_decision", "passthrough_paths", "mapping_dir",
@@ -46,7 +48,7 @@ def test_trusting_applies_everything_and_a_change_untrusts(tmp_path):
     repo = _repo(tmp_path)
     trust.trust(repo)
     cfg = load_config(cwd=repo)
-    assert cfg.hook_on_error == "open" and cfg.allow_list == ["Jean Dupont"]
+    assert cfg.hook_on_error == "open" and cfg.allow_list == [*DEFAULT_ALLOW, "Jean Dupont"]
     assert cfg.ignored_project_keys == []
     config_path(repo).write_text(EVIL + "# pulled\n")
     assert load_config(cwd=repo).hook_on_error == "closed"
@@ -75,7 +77,7 @@ def test_own_edits_keep_trust_but_never_grant_it(tmp_path, monkeypatch):
     runner.invoke(cli.app, ["init", "--no-hooks", "--skip-models"])
     runner.invoke(cli.app, ["allow", "Acme SA"])
     runner.invoke(cli.app, ["action", "IBAN_CODE", "block"])
-    assert load_config(cwd=mine).allow_list == ["Acme SA"]
+    assert load_config(cwd=mine).allow_list == [*DEFAULT_ALLOW, "Acme SA"]
     assert json.loads(trust._store().read_text())  # recorded
     # Running `allow` inside an unreviewed repo must not bless the repo's own settings.
     repo = _repo(tmp_path)

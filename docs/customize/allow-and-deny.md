@@ -12,6 +12,9 @@ pii-airlock allow "Acme SA"
 From now on "Acme SA" is never treated as personal data in this project.
 Good candidates: your company, your products, public figures you write about.
 
+A few terms are allowed out of the box: `pii-airlock`, `PII`, `Airlock`, `Presidio`, `spaCy`, `Anthropic`,
+`Claude Code`. Your rules add to them.
+
 ## Always hide something: `deny`
 
 ```bash

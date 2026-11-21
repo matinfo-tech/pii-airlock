@@ -394,11 +394,26 @@ class _Rules:
         return cls(allow, rules)
 
     def filter(self, text: str, detections: list[Detection]) -> list[Detection]:
+        """Drop detections inside an allowed term.
+
+        NER spans often run past an allowed term ("run pii-airlock", "/pii-airlock"):
+        the allowed part is cut out and what is left is kept only if it still looks
+        like a name (a capitalized word). Pattern detections (emails, IDs...) that
+        overlap an allowed term are kept whole.
+        """
         if not self.allow:
             return detections
         spans = [m.span() for rx in self.allow for m in rx.finditer(text)]
-        return [d for d in detections
-                if not any(s <= d.start and d.end <= e for s, e in spans)]
+        out = []
+        for d in detections:
+            if any(s <= d.start and d.end <= e for s, e in spans):
+                continue
+            hits = sorted((s, e) for s, e in spans if s < d.end and d.start < e)
+            if not hits or d.entity_type not in _NER_TYPES:
+                out.append(d)
+                continue
+            out.extend(_outside(text, d, hits))
+        return out
 
     def match(self, text: str) -> list[Detection]:
         return [
@@ -410,6 +425,24 @@ class _Rules:
 
 
 # Name particles and titles: never propagated on their own.
+_WORD = re.compile(r"[^\W\d_][\w'’.-]*")
+
+
+def _outside(text: str, d: Detection, hits: list[tuple[int, int]]) -> list[Detection]:
+    """The parts of `d` outside the allowed `hits` that still contain a capitalized word."""
+    pieces, pos = [], d.start
+    for s, e in hits:
+        pieces.append((pos, max(pos, s)))
+        pos = max(pos, e)
+    pieces.append((pos, d.end))
+    out = []
+    for a, b in pieces:
+        words = list(_WORD.finditer(text, a, b))
+        if any(w.group()[0].isupper() for w in words):
+            out.append(Detection(d.entity_type, words[0].start(), words[-1].end(), d.score))
+    return out
+
+
 _NAME_STOPWORDS = {
     "de", "du", "des", "la", "le", "les", "van", "von", "der", "den", "di", "da", "del",
     "dos", "mr", "mrs", "ms", "dr", "mme", "mlle", "m", "herr", "frau", "prof",
