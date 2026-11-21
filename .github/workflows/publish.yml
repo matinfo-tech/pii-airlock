@@ -54,3 +54,7 @@ jobs:
           name: dist
           path: dist/
       - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          # A re-created Release re-runs this job: files PyPI already has are skipped,
+          # not an error (PyPI never accepts the same file twice anyway).
+          skip-existing: true
