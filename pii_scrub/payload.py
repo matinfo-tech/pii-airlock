@@ -154,6 +154,13 @@ def _base64_text(data: str, transform: Transform) -> str:
     return base64.b64encode(transform(text).encode("utf-8")).decode("ascii")
 
 
+def _binary(transform: Transform, mime: str | None, data: str) -> None:
+    """Report a binary part to the transform, when it wants to know (see binary_parts)."""
+    seen = getattr(transform, "binary", None)
+    if seen is not None:
+        seen(mime, data)
+
+
 def _code(transform: Transform) -> Transform:
     """The transform for code-like text, when the scrubber offers one (engine.scrub_all)."""
     return getattr(transform, "code", transform)
@@ -166,10 +173,15 @@ def _sweep_string(value: str, transform: Transform, mime: str | None = None,
     if uri:
         if _is_text_mime(uri.group(1)):
             return value[: uri.end()] + _base64_text(value[uri.end():], transform)
-        return value  # an image, audio or document: see the binary-parts policy
+        _binary(transform, uri.group(1), value[uri.end():])
+        return value  # an image, audio or document: see binary.py
     if mime is not None:
-        return _base64_text(value, transform) if _is_text_mime(mime) else value
+        if _is_text_mime(mime):
+            return _base64_text(value, transform)
+        _binary(transform, None if mime == "application/octet-stream" else mime, value)
+        return value
     if _BASE64.fullmatch(value) and " " not in value.strip():
+        _binary(transform, None, value)
         return value  # a bare base64 blob (audio, image) with no declared type
     if code or _URI.fullmatch(value.strip()):
         return _code(transform)(value)
@@ -557,6 +569,24 @@ def adapter_names() -> list[str]:
 
 
 # --- top-level scrub / restore over a parsed body ------------------------
+
+
+class _BinaryRecorder:
+    def __init__(self) -> None:
+        self.parts: list[tuple[str | None, str]] = []
+
+    def __call__(self, text: str) -> str:
+        return text
+
+    def binary(self, mime: str | None, data: str) -> None:
+        self.parts.append((mime, data))
+
+
+def binary_parts(body: dict, adapter: PayloadAdapter) -> list[tuple[str | None, str]]:
+    """(declared MIME type or None, base64 data) of every binary part the scrub skips."""
+    recorder = _BinaryRecorder()
+    adapter.scrub_request(body, recorder)
+    return recorder.parts
 
 
 def scrub_payload(body: dict, adapter: PayloadAdapter, scrub: Transform) -> dict:

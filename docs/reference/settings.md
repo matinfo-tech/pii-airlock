@@ -68,6 +68,7 @@ See [Placeholders explained](/customize/placeholders).
 
 | Setting | Default | Meaning |
 |---|---|---|
+| `binary_parts` | `scan` | Images, audio and files inside a gateway request. `scan`: PDF and Word text is checked and the request refused if it holds personal data; images and audio are forwarded with a warning; other files are refused. `block`: refuse every one. `allow`: forward all unchecked. |
 | `passthrough_paths` | `[]` | Path fragments forwarded without cleaning. Use only when you are sure they carry no personal data. |
 | `mapping_backend` | `memory` | `memory` keeps nothing on disk. `file` stores mappings, encrypted. |
 | `mapping_dir` | | Folder for the `file` backend |

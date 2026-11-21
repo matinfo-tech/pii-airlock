@@ -122,8 +122,21 @@ in [Settings](/reference/settings).
 - Text files sent inline as base64 (a `text/plain` document, a CSV part) are decoded, cleaned and re-encoded.
 - Not cleaned: protocol fields the provider checks (model, role, type, ids, tool names, signatures), and
   credentials meant for the provider (an MCP server's `authorization_token`).
-- Images, audio, PDFs and other binary files inside a request: **sent as they are**.
+- Images, audio and files inside a request are never altered (they cannot be rewritten safely). What happens
+  depends on `binary_parts` (see below).
 - Anthropic `thinking` blocks are signed, so they are neither cleaned nor restored.
+
+### Images, audio and attached files
+
+| Attached | `binary_parts: scan` (default) | `block` | `allow` |
+|---|---|---|---|
+| PDF or Word document | Its text is checked. With personal data: **refused** (403). Clean: sent. | refused | sent |
+| Image, audio, video | **Sent unchecked**, with a warning in the gateway log | refused | sent |
+| Any other file (zip, spreadsheet...) | **refused**: its content cannot be checked | refused | sent |
+
+A refused document stays in the conversation, and coding agents resend the whole conversation on every turn: remove
+it, or start a new conversation, then send its cleaned text instead (`pii-airlock scrub report.pdf`). Screenshots
+are not read: if they may show personal data, set `binary_parts: block`.
 
 URLs, commands and tool definitions are checked like [code](/use/claude-code#shell-commands-and-code): an email or
 a name in them is cleaned, but `https://example.com/logo.png` or "Executes a bash command" is not mistaken for one.

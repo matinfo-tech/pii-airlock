@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Security
+- Images, audio and files inside a gateway request are no longer forwarded blindly. New
+  setting `binary_parts` (default `scan`): PDF and Word attachments are text-checked and
+  the request is refused if they hold personal data; images and audio are forwarded with
+  a warning in the gateway log (no OCR); any other file (zip, spreadsheet, unknown) is
+  refused. `block` refuses every binary part, `allow` restores the old behaviour. A
+  document's verdict is cached by digest (types and counts only), since agents resend
+  attachments on every turn.
 - The gateway now cleans **every string in a request** except a short, tested list of
   protocol fields (model, role, type, ids, tool names, signatures, `authorization_token`).
   Before, it cleaned a list of known text fields, and a leak test planting a value in every
@@ -17,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `executableCode` and code output. That test (`tests/test_gateway_leaks.py`) now guards
   every provider.
 - Text files sent inline as base64 (`text/*`, JSON, CSV, YAML, SQL) are decoded, cleaned
-  and re-encoded. Images, audio and PDFs are still sent as they are.
+  and re-encoded.
 - Disguised personal data is now found (`pii_scrub/obfuscation.py`): zero-width
   characters, Cyrillic/Greek look-alikes, fullwidth digits and letters, URL / HTML / JSON
   escapes, `[at]` `(dot)` and `at … dot …` e-mails, spaced-out letters, line breaks
@@ -25,6 +32,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the original disguised span is what gets tokenized. On a new corpus
   (`tests/eval/obfuscated.jsonl`), caught went from 19 of 32 to 32 of 32 with no new
   false alarm; the eval gate (`OBFUSCATED`) now requires all of them.
+
+### Changed
+- The `proxy` extra now includes `pdfminer.six` and `python-docx`, so the gateway can
+  read the attachments it checks.
+- URLs, commands and tool or schema definitions in a request are checked like code (the
+  hook's name-shape filter, now `pii_scrub/codenoise.py`), so a URL or "Executes a bash
+  command" is no longer tokenized as a person or place by small models.
+- The eval code gate (`CODE` in `thresholds.json`, was `SHELL`) also scores
+  `tests/eval/code_snippets.jsonl`.
 
 ### Fixed
 - The tool hook's code filter (0.8.3, shell commands only) now covers all code-like input:
@@ -35,13 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `.txt`) are still scanned as prose. On a new code corpus, clean snippets passing went
   from 21 of 66 to 62 of 66 with the four small models, with no PII missed. Reading a
   source file still often asks: product names in comments read as names.
-
-### Changed
-- URLs, commands and tool or schema definitions in a request are checked like code (the
-  hook's name-shape filter, now `pii_scrub/codenoise.py`), so a URL or "Executes a bash
-  command" is no longer tokenized as a person or place by small models.
-- The eval code gate (`CODE` in `thresholds.json`, was `SHELL`) also scores
-  `tests/eval/code_snippets.jsonl`.
 
 ## [0.8.3] - 2026-11-21
 

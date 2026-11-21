@@ -27,7 +27,8 @@ For truly sensitive material, review the cleaned text yourself.
 
 Specific gaps:
 
-- **Images, audio and attachments** inside a request are forwarded as they are.
+- **Images and audio** inside a request are forwarded unchecked (with a warning), unless `binary_parts: block`.
+  PDF and Word attachments are checked, and refused if they hold personal data.
 - **Output of tools** such as the result of `cat file` is not seen by hooks. The gateway does cover it.
 - **Copilot's default models and inline suggestions** cannot be protected at all.
 - **Websites and mobile apps** cannot be pointed at the gateway.
