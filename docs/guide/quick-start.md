@@ -21,7 +21,7 @@ pipx --version
 ## 2. Install
 
 ```bash
-pipx install "pii-airlock[proxy]"
+pipx install pii-airlock
 ```
 
 pipx puts pii-airlock in its own private space, so it never interferes with your other Python projects.

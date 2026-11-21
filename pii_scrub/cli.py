@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import importlib.util
 import os
-import subprocess
 import sys
 from collections import Counter
 from dataclasses import replace
@@ -226,60 +225,11 @@ def detect(
         typer.echo(f"{d.entity_type:<16} {d.score:.2f}  [{d.start}:{d.end}]  {snippet!r}")
 
 
-def _has_pip() -> bool:
-    """Whether this interpreter can install packages with pip.
-
-    pipx venvs ship without pip, so `spacy download` (which shells out to pip)
-    cannot install a model into them.
-    """
-    return importlib.util.find_spec("pip") is not None
-
-
 def _model_installed(model: str) -> bool:
-    """Check, in a fresh interpreter, whether `model` is importable.
+    """Whether `model` loads: a stored copy, an installed package, or a path."""
+    from . import models
 
-    A subprocess avoids stale import caches right after an install attempt.
-    """
-    code = f"import importlib.util, sys; sys.exit(0 if importlib.util.find_spec({model!r}) else 1)"
-    return subprocess.call([sys.executable, "-c", code]) == 0
-
-
-def _spacy_wheel_url(model: str) -> str | None:
-    """Best-effort resolve the direct wheel URL for a spaCy model.
-
-    Never raises: returns None if spaCy's compatibility table can't be reached
-    or its internals changed, so callers can fall back to generic guidance.
-    """
-    try:
-        from spacy.cli.download import get_compatibility, get_version
-
-        version = get_version(model, get_compatibility())
-        return (
-            "https://github.com/explosion/spacy-models/releases/download/"
-            f"{model}-{version}/{model}-{version}-py3-none-any.whl"
-        )
-    except Exception:
-        return None
-
-
-def _inject_hint(models: list[str]) -> None:
-    """Print exact commands to install models into a pip-less (e.g. pipx) env."""
-    typer.echo(
-        "This interpreter has no pip (typical for a pipx install), so spaCy "
-        "models can't be downloaded the usual way.\nInstall each model directly "
-        "— for a pipx install, use:",
-        err=True,
-    )
-    for model in models:
-        url = _spacy_wheel_url(model)
-        if url:
-            typer.echo(f'  pipx inject pii-airlock "{url}"', err=True)
-        else:
-            typer.echo(
-                f"  pipx inject pii-airlock  # wheel for {model}: "
-                "https://github.com/explosion/spacy-models/releases",
-                err=True,
-            )
+    return models.locate(model) is not None
 
 
 def _download_gliner(model: str) -> None:
@@ -298,7 +248,15 @@ def _configured_models(config: object) -> list[str]:
     return [config.models[lc] for lc in config.languages if lc in config.models]
 
 
+def _model_problem(model: str) -> str | None:
+    """None if `model` loads and runs, else why not (see models.check)."""
+    from . import models
+
+    return models.check(model)
+
+
 def _missing_proxy_deps() -> list[str]:
+    """Gateway modules this environment lacks (core dependencies: none, unless broken)."""
     required = ("httpx", "starlette", "uvicorn")
     return [name for name in required if importlib.util.find_spec(name) is None]
 
@@ -330,30 +288,25 @@ def download_models(
         typer.echo("No models configured.", err=True)
         raise typer.Exit(code=1)
 
-    # pipx and other pip-less envs can't install via `spacy download`; guide only
-    # for models that are missing in the current interpreter.
-    if not _has_pip():
-        missing = [model for model in models if not _model_installed(model)]
-        if missing:
-            _inject_hint(missing)
-            raise typer.Exit(code=1)
-        typer.echo("Done.", err=True)
-        return
+    # Into pii-airlock's own data directory, not the Python environment: a pipx or
+    # uv reinstall rebuilds that environment and would take the models with it.
+    from . import models as store
 
     failed: list[str] = []
     for model in models:
-        typer.echo(f"Downloading {model} ...", err=True)
-        rc = subprocess.call([sys.executable, "-m", "spacy", "download", model])
-        # Verify: some installers report success without placing the model here.
-        if rc != 0 or not _model_installed(model):
+        if store.stored(model) is not None:
+            typer.echo(f"{model}: already in {store.home()}", err=True)
+            continue
+        try:
+            path = store.install(model, progress=lambda line: typer.echo(line, err=True))
+        except RuntimeError as exc:
+            typer.echo(f"{model}: {exc}", err=True)
             failed.append(model)
+            continue
+        typer.echo(f"{model}: installed in {path}", err=True)
 
     if failed:
         typer.echo(f"Failed to install: {', '.join(failed)}", err=True)
-        for model in failed:
-            url = _spacy_wheel_url(model)
-            if url:
-                typer.echo(f'  Try:  {sys.executable} -m pip install "{url}"', err=True)
         raise typer.Exit(code=1)
     typer.echo("Done.", err=True)
 
@@ -407,8 +360,6 @@ def init(
                 typer.echo("[needs action] Model setup needs manual completion.", err=True)
 
     typer.echo("\nOptional, for chat clients (Cursor, Codex, SDKs): the gateway", err=True)
-    if _missing_proxy_deps():
-        typer.echo("  pipx inject pii-airlock 'pii-airlock[proxy]'", err=True)
     typer.echo("  pii-airlock proxy", err=True)
     for line in _env_export_examples(host, port)[:1]:
         typer.echo(f"  {line}", err=True)
@@ -527,6 +478,10 @@ def status() -> None:
 def doctor() -> None:
     """Health checks for a local pii-airlock installation."""
     config = _build_config(None, None)
+    from . import models as store
+
+    fragile: list[str] = []
+    broken: list[str] = []
     if config.ner_backend == "gliner":
         models = [f"{config.gliner_model} (GLiNER)"]
         missing_models = ([] if importlib.util.find_spec("gliner")
@@ -534,28 +489,34 @@ def doctor() -> None:
     else:
         models = _configured_models(config)
         missing_models = [m for m in models if not _model_installed(m)]
+        # Loads now, but lives inside the app's environment: a reinstall drops it.
+        fragile = [m for m in models if m not in missing_models and store.in_environment_only(m)]
+        # Importable is not enough: spaCy can fail on load (e.g. on a too-new Python).
+        broken = [problem for m in models if m not in missing_models
+                  for problem in [_model_problem(m)] if problem]
     missing_deps = _missing_proxy_deps()
-    has_pip = _has_pip()
     m = Mapping()
     mapping_ok = m.restore(m.token_for("PERSON", "A")) == "A"
 
     # (name, state, detail): "fail" breaks the install and sets the exit code; "info" is
-    # an optional part that is absent (the gateway, pip in a pipx env).
+    # worth knowing but works.
     checks: list[tuple[str, str, str]] = [
         ("Python", "ok", sys.executable),
-        ("pip", "ok" if has_pip else "info",
-         "found" if has_pip else
-         "absent (normal for pipx: `download-models` prints `pipx inject` commands)"),
-        ("gateway deps", "ok" if not missing_deps else "info",
-         "ok" if not missing_deps else
-         f"not installed ({', '.join(missing_deps)}), needed only for `pii-airlock proxy`: "
-         "pipx inject pii-airlock 'pii-airlock[proxy]'"),
+        ("gateway deps", "fail" if missing_deps else "ok",
+         f"missing: {', '.join(missing_deps)} (reinstall pii-airlock)" if missing_deps else "ok"),
         ("configured models", "ok" if models else "fail", ", ".join(models) or "none"),
         ("installed models", "fail" if missing_models else "ok",
-         f"missing: {', '.join(missing_models)}" if missing_models else "ok"),
+         f"missing: {', '.join(missing_models)} (run `pii-airlock download-models`)"
+         if missing_models else "ok"),
+        ("model load", "fail" if broken else "ok", broken[0] if broken else "ok"),
         ("mapping roundtrip", "ok" if mapping_ok else "fail", "ok"),
         ("hook daemon", "ok", _daemon_status(config)),
     ]
+    if fragile:
+        checks.insert(5, ("model location", "info",
+                          f"{', '.join(fragile)} only inside the app's environment, which a "
+                          "reinstall replaces: `pii-airlock download-models` keeps a copy "
+                          f"in {store.home()}"))
 
     failed = False
     for name, state, detail in checks:

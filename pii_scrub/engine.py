@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from functools import cached_property, lru_cache
 from typing import TypeVar
 
+from . import models as model_store
 from .config import Config, load_config
 from .mapping import Mapping
 from .recognizers import Finding, detect_builtin, detect_fallback
@@ -95,7 +96,9 @@ class ScrubEngine:
                 "No spaCy models configured for languages "
                 f"{self.config.languages}. Check `models:` in your config."
             )
-        missing = [m["model_name"] for m in models if not _model_available(m["model_name"])]
+        # A stored copy (outside the app's environment) or an installed package.
+        located = {m["model_name"]: model_store.locate(m["model_name"]) for m in models}
+        missing = [name for name, where in located.items() if where is None]
         if missing:
             # Fail here: Presidio would otherwise try to download the model, and
             # spaCy's downloader prints to stdout and calls sys.exit().
@@ -103,11 +106,15 @@ class ScrubEngine:
                 f"spaCy model(s) not installed: {', '.join(missing)}. "
                 "Run `pii-airlock download-models`."
             )
+        models = [{**m, "model_name": located[m["model_name"]]} for m in models]
         languages = [m["lang_code"] for m in models]
         provider = NlpEngineProvider(
             nlp_configuration={"nlp_engine_name": "spacy", "models": models}
         )
-        nlp_engine = provider.create_engine()
+        try:
+            nlp_engine = provider.create_engine()
+        except Exception as exc:  # e.g. a spaCy build that breaks on this Python
+            raise RuntimeError(model_store.load_failure(exc)) from exc
         return AnalyzerEngine(
             nlp_engine=nlp_engine,
             registry=_build_registry(languages, nlp_engine),
@@ -553,14 +560,6 @@ def collect_texts(run: Callable[[Callable[[str], str]], object]) -> list[str]:
 
     run(grab)
     return texts
-
-
-def _model_available(model: str) -> bool:
-    """Whether a spaCy model name (installed package) or path can be loaded."""
-    import importlib.util
-    from pathlib import Path
-
-    return importlib.util.find_spec(model) is not None or Path(model).is_dir()
 
 
 def _build_registry(languages: list[str], nlp_engine):

@@ -12,8 +12,10 @@ It prints one line per check. Every line should start with `[ok]`.
 
 | Line | Meaning if it says `fail` |
 |---|---|
-| gateway dependencies | The gateway add-on is missing. Run `pipx inject pii-airlock 'pii-airlock[proxy]'`. |
-| models | Name-spotting models are not installed. Run `pii-airlock download-models`. |
+| gateway deps | The installation is incomplete. Run `pipx reinstall pii-airlock`. |
+| installed models | Name-spotting models are not installed. Run `pii-airlock download-models`. |
+| model load | The models are there but spaCy cannot run them, usually on a Python that is too new. The line says what to run. |
+| model location | Information only. A model lives inside pipx's environment, which a reinstall replaces. `pii-airlock download-models` keeps a copy that survives. |
 | mapping roundtrip | An internal self-test failed. Reinstall and report a bug if it persists. |
 | hook daemon | Information only. It shows whether the speed-up helper for hooks is running. |
 

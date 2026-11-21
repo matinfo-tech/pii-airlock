@@ -20,8 +20,7 @@ text and combines the results, so mixed text is handled.
    pii-airlock doctor
    ```
 
-   `download-models` picks up the new language from your file. If it reports that your environment has no `pip`
-   (common with pipx), it prints the exact `pipx inject` commands to run instead.
+   `download-models` picks up the new language from your file.
 
 More models: [spaCy models list](https://spacy.io/models).
 

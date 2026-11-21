@@ -1,6 +1,6 @@
 """PDF — extract text, scrub it, emit plain text.
 
-Optional dependency: pdfminer.six  (pip install 'pii-airlock[pdf]')
+Reads with pdfminer.six (a core dependency).
 
 MVP scope: PDF is read-only. We extract the text layer and output scrubbed
 .txt; we do not re-render a PDF. Documented in the user guide (guide/safety).
