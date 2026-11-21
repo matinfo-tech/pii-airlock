@@ -370,3 +370,19 @@ def test_phone_inside_an_iban_is_not_reported_separately(monkeypatch):
     monkeypatch.setattr(engine, "_model_findings", lambda t, lang: (
         ("IBAN_CODE", 5, 32, 1.0), ("PHONE_NUMBER", 20, 32, 0.8)))
     assert [d.entity_type for d in engine.detect(text)] == ["IBAN_CODE"]
+
+
+@pytest.mark.parametrize(("text", "span", "expected"), [
+    ("run pii-airlock:setup", (0, 15), []),                  # lowercase leftover: dropped
+    ("/pii-airlock:setup", (0, 12), []),                     # punctuation only: dropped
+    ("Jean Dupont uses pii-airlock", (0, 28), ["Jean Dupont uses"]),  # name part still hidden
+])
+def test_allow_term_is_cut_out_of_wider_ner_spans(text, span, expected):
+    eng = _engine_returning([("PERSON", *span, 0.85)], allow_list=["pii-airlock"])
+    assert [d.text(text) for d in eng.detect(text)] == expected
+
+
+def test_allow_term_does_not_unhide_overlapping_pattern_detections():
+    text = "pii-airlock@example.com"
+    eng = _engine_returning([("EMAIL_ADDRESS", 0, len(text), 0.9)], allow_list=["pii-airlock"])
+    assert [d.text(text) for d in eng.detect(text)] == [text]
