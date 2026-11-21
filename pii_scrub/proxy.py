@@ -57,8 +57,8 @@ def _require_deps():
         import uvicorn  # noqa: F401
     except ModuleNotFoundError as exc:  # pragma: no cover - import guard
         raise SystemExit(
-            "The proxy requires extra dependencies.\n"
-            "Install them with:  pip install 'pii-airlock[proxy]'"
+            "The gateway's libraries (httpx, starlette, uvicorn) are missing from this "
+            "installation.\nReinstall pii-airlock (e.g. `pipx reinstall pii-airlock`)."
         ) from exc
 
 

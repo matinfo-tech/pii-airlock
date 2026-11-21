@@ -18,12 +18,13 @@ Tokenizer = Callable[[str, str], str]
 
 
 class MissingExtra(RuntimeError):
-    """Raised when a format needs an optional dependency that isn't installed."""
+    """Raised when a format's library is missing (a core dependency: a broken install)."""
 
     def __init__(self, extra: str, package: str) -> None:
         super().__init__(
-            f"This format requires the optional '{extra}' dependency.\n"
-            f"Install it with:  pip install 'pii-airlock[{extra}]'   (provides {package})"
+            f"This format needs {package}, which is missing from this installation.\n"
+            f"Reinstall pii-airlock (e.g. `pipx reinstall pii-airlock`), or "
+            f"`pip install '{package}'`."
         )
 
 

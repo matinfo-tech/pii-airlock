@@ -20,7 +20,7 @@ guarded() {
 
 if ! command -v pii-airlock >/dev/null 2>&1; then
   guarded || exit 0
-  msg='pii-airlock is not installed. Install it with `brew install matinfo/tap/pii-airlock` or `pipx install "pii-airlock[proxy]"`, then run `pii-airlock download-models`.'
+  msg='pii-airlock is not installed. Install it with `brew install matinfo/tap/pii-airlock` or `pipx install pii-airlock`, then run `pii-airlock download-models`.'
   if [ "$event" = "session-start" ]; then
     echo "$msg PII protection is OFF until then: prompts and tool calls are blocked."
     exit 0

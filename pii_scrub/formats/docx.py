@@ -1,6 +1,6 @@
 """Word .docx — scrub every text-bearing part, keep document structure.
 
-Optional dependency: python-docx  (pip install 'pii-airlock[docx]')
+Reads with python-docx (a core dependency).
 
 Covered: body, tables, text boxes, headers and footers, footnotes, endnotes,
 comments (including parts python-docx only keeps as raw bytes), tracked
