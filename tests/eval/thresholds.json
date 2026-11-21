@@ -1,7 +1,8 @@
 {
   "ALL": {
     "leak_free": 0.95,
-    "precision": 0.4
+    "precision": 0.4,
+    "words_kept": 0.8
   },
   "PERSON": {
     "leak_free": 0.9

@@ -80,6 +80,16 @@ class Report:
     total: Stats = field(default_factory=Stats)
     misses: list[str] = field(default_factory=list)
     false_positives: list[str] = field(default_factory=list)
+    words: int = 0       # words that are not PII
+    hidden: int = 0      # of those, covered by a detection (tokenized for nothing)
+
+    @property
+    def words_kept(self) -> float:
+        """Share of the words that are not PII left readable: what over-detection costs."""
+        return 1 - self.hidden / self.words if self.words else 1.0
+
+
+_WORDS = re.compile(r"\w+")
 
 
 def load_corpus(path: Path = CORPUS) -> list[dict]:
@@ -142,6 +152,13 @@ def evaluate(cases: list[dict], models: dict[str, str], backend: str = "spacy") 
             if not hit:
                 kind = "LEAK" if not covered else "mistyped"
                 report.misses.append(f"[{case['id']}] {kind} {entity}: {text[start:end]!r}")
+        gold_chars = {i for _, s, e in gold for i in range(s, e)}
+        det_chars = {i for _, s, e in dets for i in range(s, e)}
+        for m in _WORDS.finditer(text):
+            chars = set(range(m.start(), m.end()))
+            if not chars & gold_chars:
+                report.words += 1
+                report.hidden += bool(chars & det_chars)
         for entity, start, end in dets:
             ok = any(t == entity and _overlap((start, end), (s, e)) for t, s, e in gold)
             for st in (report.per_entity[entity], report.total):
@@ -299,6 +316,8 @@ def format_report(report: Report, verbose: bool = False) -> str:
         )
     t = report.total
     rows.append(f"{'ALL':<16}{t.gold:>5}{t.recall:>9.2f}{t.leak_free:>11.2f}{t.precision:>11.2f}")
+    rows.append(f"words kept: {report.words_kept:.2f} ({report.hidden} of {report.words} "
+                "words that are not PII were hidden)")
     if verbose:
         rows += ["", "Misses:", *report.misses, "", "Extra detections:", *report.false_positives]
     return "\n".join(rows)
@@ -312,7 +331,7 @@ def check_gate(report: Report, thresholds: dict) -> list[str]:
             continue  # see check_code_gate
         st = report.total if entity == "ALL" else report.per_entity.get(entity, Stats())
         for metric, floor in floors.items():
-            value = getattr(st, metric)
+            value = report.words_kept if metric == "words_kept" else getattr(st, metric)
             if value + 1e-9 < floor:
                 failures.append(f"{entity} {metric} {value:.2f} < {floor:.2f}")
     return failures
