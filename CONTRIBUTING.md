@@ -47,9 +47,10 @@ python3 -m venv .venv
   [Add a language](https://pii-airlock.matinfo.tech/customize/languages) in the
   user guide. A docs PR listing a working `{lang: model}` pair is useful.
 - **Add a provider adapter.** Implement a `PayloadAdapter` in
-  `pii_scrub/payload.py` (one class: where user text lives in the request, where
-  model text lives in the response) and register it. Add tests in
-  `tests/test_payload.py` mirroring the existing ones.
+  `pii_scrub/payload.py`. Requests need no code: every string is scrubbed except
+  `STRUCTURAL_KEYS`. Write where model text lives in responses and streams
+  (`restore_response`, `restore_event`), and add a kitchen-sink request body to
+  `tests/test_gateway_leaks.py` plus tests in `tests/test_payload.py`.
 - **Custom recognizers** to improve detection (e.g. locale-specific phone/ID
   formats) via Presidio's recognizer registry.
 

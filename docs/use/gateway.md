@@ -115,9 +115,18 @@ in [Settings](/reference/settings).
 
 ## What is not cleaned
 
-- Text in chat, completion, embedding and token-count requests: **cleaned**, including tool results and tool arguments.
-- Images, audio and attached files inside a request: **sent as they are**.
+- **Every piece of text in a request is cleaned**, in any field, including ones the gateway has never seen
+  before: messages, system prompts, tool results and arguments, tool and schema descriptions, metadata,
+  `user`, stop sequences, citations, prompt variables, code-execution parts. A new provider feature
+  cannot slip past by being unknown.
+- Text files sent inline as base64 (a `text/plain` document, a CSV part) are decoded, cleaned and re-encoded.
+- Not cleaned: protocol fields the provider checks (model, role, type, ids, tool names, signatures), and
+  credentials meant for the provider (an MCP server's `authorization_token`).
+- Images, audio, PDFs and other binary files inside a request: **sent as they are**.
 - Anthropic `thinking` blocks are signed, so they are neither cleaned nor restored.
+
+URLs, commands and tool definitions are checked like [code](/use/claude-code#shell-commands-and-code): an email or
+a name in them is cleaned, but `https://example.com/logo.png` or "Executes a bash command" is not mistaken for one.
 
 ## How the gateway works (details)
 
@@ -159,8 +168,9 @@ Opt specific paths out with `passthrough_paths` only if you know they carry no p
 
 ## Add a provider
 
-A provider is one small adapter: implement `scrub_request` (where user text lives) and `restore_response`
-(where model text lives) in `pii_scrub/payload.py`, register it and add tests. See
+A provider is one small adapter in `pii_scrub/payload.py`. Requests need no code: every string is cleaned
+except `STRUCTURAL_KEYS`. Implement `restore_response` and `restore_event` (where model text lives in
+responses and streams), register it, and add a request body to `tests/test_gateway_leaks.py`. See
 [CONTRIBUTING](https://github.com/matinfo-tech/pii-airlock/blob/main/CONTRIBUTING.md).
 
 ## Check it

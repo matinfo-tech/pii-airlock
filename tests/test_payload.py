@@ -36,8 +36,9 @@ def test_openai_request_string_and_parts():
     assert out["messages"][0]["content"] == "BE NICE"
     assert out["messages"][1]["content"] == "HELLO SECRET"
     assert out["messages"][2]["content"][0]["text"] == "PART SECRET"
-    # non-text part untouched
-    assert out["messages"][2]["content"][1]["image_url"]["url"] == "http://x"
+    # a URL is scanned too (it can carry an e-mail); the real scrubber leaves a clean one
+    assert out["messages"][2]["content"][1]["image_url"]["url"] == "HTTP://X"
+    assert out["messages"][2]["content"][1]["type"] == "image_url"
     # role/model untouched
     assert out["messages"][1]["role"] == "user" and out["model"] == "gpt-x"
     # original not mutated
@@ -152,7 +153,7 @@ def test_anthropic_message_batches():
         "messages": [{"role": "user", "content": "batch secret"}]}}]}
     out = scrub_payload(body, a, UP)
     assert out["requests"][0]["params"]["messages"][0]["content"] == "BATCH SECRET"
-    assert out["requests"][0]["custom_id"] == "r1"
+    assert out["requests"][0]["custom_id"] == "R1"  # chosen by the caller: scanned
 
 
 def test_anthropic_response_restores_tool_use_but_not_thinking():
